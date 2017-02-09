@@ -1,0 +1,2 @@
+# MR
+Mrezno racunarstvo - teorija
