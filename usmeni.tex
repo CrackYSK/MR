@@ -5,7 +5,7 @@
 \usepackage{currvita}
 \usepackage{graphicx}
 \graphicspath{ {images/} }
-\title{Mrežno računarstvo}
+\title{Mrežno računarstvo - skripta}
 
 
 % Main document
@@ -431,18 +431,131 @@ Bežični kanali: Za dato B, SNR drastično varira, čak i do 60dB. Nije isplati
 
 \section{Pregled relevantnijih sistema komunikacija}
 \section{Sloj veze, uloga, komunikacija sa slojem ispod i iznad, kratko objašnjenje spiska aktivnosti na sloju veze}
+(preuzeto iz beleški sa časa)\\
+
+Sloj veze je sloj koji se nalazi iznad fizičkog sloja, a ispod mrežnog sloja. Ima ulogu da prenosi okvir duž jednog ili više komunikacionih kanala. Možemo da gledamo pojednostavljeno, tj. da razmatramo slučaj u kome on ima zadatak da prenese JEDAN okvir od tačke A do tačke B. Zatim ćemo posmatrati da prenosi sekvencu okvira od tačke A do tačke B. Okvir je jedinična kol. podataka sa kojom barata sloj veze, tj. okvir je fiksne veličine.\\
+Ono što je bitno je da za njega podaci nisu samo bitovi, već barata sa nekakvim logičkim podacima, tj. okvirima.\\
+
+Mrežni sloj prosleđuje sloju veze nekakav paket i kaže mu ti treba da pošalješ ovaj paket na određenu adresu. Sloj veze dekoriše paket, tj. sloj veze ima svoj format podataka koji se zove okvir i jedno polje tog okvira je info field - polje za podatke. Znači, sloj veze pakuje pristigli paket kao jedan element svog formata podataka i dodaje nekakve informacije. Za početak, dodaje zaglavlje, tj. preambulu i dodaje neke podatke posle paketa, a taj deo je obično vezan za neke kontrolne informacije i informacije za detekciju i korekciju grešaka. Kada završi dekorisanje paketa, prenosi ga nižem sloju, tj. fizičkom nivou. Fizički nivo nema predstavu da su to okviri i ne zna gde su granice okvira, on razmatra te informacije na nivou bitova. \\
+
+Što se tiče suprotne strane, fizičkom sloju stiže niz bitova. On uzima te bitove, nema predstavu gde su granice okvira opet. Prosleđuje sloju veze i između fizičkog sloja i sloja veze se stvara ideja šta predstavlja taj niz bitova, tj. gde su granice okvira. Sloj veze raspakuje okvir i izvlači samo ono što se tiče mrežnog sloja, odnosno info field i prosleđuje ga gore, mrežnom sloju.
+\\
+
+Ovo je posmatranje idealnog scenarija - svi bitovi su poslati, svi bitovi će stići i nema nikakvih grešaka.
 \section{Uokvirivanje u sloju veze}
+(preuzeto iz beleški sa časa)\\
+
+Uokvirivanje se bavi time šta se stavlja na vrh okvira, odnosno u zaglavlje. To je u stvari definisanje preambule i  tiče se uspostavljanja granica između okvira - šta ćeš staviti u zaglavlje okvira kako bi se razlikovao jedan okvir od narednog. Postoje različiti sistemi kako možemo da uokvirimo.\\
+
+Fizički sloj da niz bitova. Kako da iz niza bitova znamo gde je okvir (ona suprotna strana)? Onaj koji šalje mora da ima usaglašen algoritam sa drugom, suprotnom stranom, sa inverznim algoritmom skidanja okvira - pakovanje i raspakivanje treba da budu usaglašeni. \\
+
+Metode uokvirivanja moraju da budu dovoljno dobre, što znači da se ponašaju dobro u praksi. Standardne metode uokvirivanja su:
+\begin{enumerate}
+  \item brojanje bajtova (samo motivacioni)
+  \item umetanje bajtova
+  \item umetanje bitova
+\end{enumerate}
+
+Ponekad fizički sloj ima veze sa uokvirivanjem, odnosno pomaže u identifikaciji okvira. U teoriji, ne bi trebalo da se bavi time.
+\subsection{Brojanje bajtova}
+Svaki okvir započnemo sa poljem o njegovoj dužini. Kada suprotna strana, primalac, primi niz bitova, prvi broj koji izvuče jeste dužina okvira. On broji, startuje brojač. Kada izbroji do određenog broja bitova, tj. kada brojač istekne, on kaže ovde je kraj prvog okvira, sad ide sledeći okvir. Sledeći broj koji dobijem je dužina sledećeg okvira.\\
+Da li je ovaj sistem dobar? U idealnim okolnostima je vrlo efikasan. Ali i pod najmanjim smetnjama može da se desi ozbiljan problem. Na primer, može da se izgubi neki bajt (prekine se neki deo komunikacione opreme), ili bitovi budu potpuno izmenjeni (zagrevanje kabla). Ako se desi da je greška baš na bitu koji predstavlja dužinu okvira, onda je to jako loše. Ovo znači da je ovaj mehanizam nepouzdan jer primalac ne može da se oporavi od ovakve greške, a i ne zna da se desila greška. Ovakva greška remeti sve dalje okvire, a primalac i dalje nije svestan toga jer ne može semantički da uđe u podatak i da vidi da postoji greška.
+\begin{center}
+\includegraphics[width=10cm, height=5cm]{brojanjeBajtova}\\
+\end{center}
+\subsection{Umetanje bajtova}
+Kada počinje novi okvir, ubaciću specijalnu sekvencu koja označava početak okvira. Kada primalac vidi tu spec. sekvencu, zna da je to početak okvira. Bolje je ideja od prethodne jer omogućava lakši oporavak od greške. Ako postoji greška u tom okviru, neće se propagirati na dalje okvire jer će naići nova sekvenca koja pokazuje da je tu početak novog okvira. U nekom momentu, za taj okvir u kome postoji greška, detekcija grešaka će shvatiti da tu postoji greška i ponove će zahtevati slanje okvira. Ako se desi da je greška baš na toj spec. sekvenci, onda će primalac uzeti dva okvira kao jedan okvir.  \\
+
+Postoji jedan problem. Šta ako je ta spec. sekvenca, tj. indikator, unutar podatka?\\
+Rešenje: Pre nego što pošiljalac pošalje okvir, on prođe kroz sadržaj i kod svih indikatora unutar podataka (koji odgovaraju toj specijalnoj sekvenci, tj. indikatoru koji nama služi za početak okvira, a to može biti neki specijalan bajt) umetne ESC sekvencu. Primalac čita podatke i naleti na taj indikator, ako pre njega nije naišao na ESC, to znači da je stvarno početak paketa. Ako naleti na indikator, a pre njega je bio ESC, to znači da to nije indikator početka okvira, nego je stvarno podatak. \\
+
+Šta ako je poslednja informacija bude ESC? Onda će ići ESC pa indikator, što znači da će primalac, dok čita to , promašiti početak novog okvira. Rešenje je da pošiljalac kada šalje podataka eskejpuje sve indikatore i sve ESC koji su podaci. Primalac, kad dobije informaciju, skida esc i onda zna da je to bio pravi ESC ili ESC koji je umetnut. Primalac uvek skida prvi eskejp i zadržava naredni podatak. 
+\begin{center}
+\includegraphics[width=10cm, height=6cm]{umetanjeBajtova}\\
+\end{center}
+\subsection{Umetanje bitova}
+Slična ideja, samo sad ne vršimo parsiranje bajt po bajt, nego bit po bit. Praksa je da se koristi identifikator 6 uzastopnih jedinica. One predstavljaju početak okvira.\\
+
+Šta ako se u okviru podataka desi da se nađu 6 uzastopnih jedinica? Pošiljalac treba da se pobrine da u okviru podataka ne postoji nigde 6 uzastopnih jedinica. Kako postiže to? Prilikom slanja prolazi kroz podatke i ako postoji negde ta sekvenca jedinica, on umeće nulu posle pete jedinice. Primalac kada vidi 6 jedinica, zna da tu počinje okvir, a kada naiđe na 5 jedinica gde je sledeća nula, on zna da je ta nula umetnuta tu, skida je i ne posmatra je kao podatak.\\
+
+Sledeći korak je detekcija i korekcija grešaka. Sada znamo gde su granice okvira, a može da se desi da se desilo promena jednog bita baš u sekvenci 6 jedinica, što znači da je primalac uzeo kao jedan okvir dva prava okvira. Mehanizam za detekciju grešaka može da shvati da se tu pojavila greška. Traži ponovno slanje njih. Gde god da se desi greška, sloj veze treba da bude dovoljno otporan na nju.
+\begin{center}
+\includegraphics[width=10cm, height=3cm]{umetanjeBitova}\\
+\end{center}
 \section{Kodiranje grešaka u sloju veze}
+(preuzeto iz beleški sa predavanja)\\
+
+Dolazi do greške na nekim bitovima zbog šuma ili zbog prekida rada (ne zanima nas uzrok greške). Greška može da se desi sa nekom šansom (da ima verovatnoću), ali može da ima i različite distribucije pojavljivanja. Znači, treba da imamo u vidu tip greške: 
+\begin{itemize}
+  \item \textbf{ravnomerna}  - npr. jedna na svakih hiljadu bitova(ako govorimo o verovatnoći 0.001), nastaje zbog šuma
+  \item \textbf{rafalna} - javlja se na velikom broju uzastopnih bitova, npr. zbog varničenja, signal se potupuno naruši
+\end{itemize} 
+Šta možemo da uradimo? Možemo detekciju grešaka sa retransmisijom (ponovno slanje) a može da se uradi i korekcija grešaka (podatak nosi sa sobom dovoljno informacija da se ispravi greška i ne zahteva ponovno slanje).\\
+Pristup dodavanje redudantnosti:
+\begin{itemize}
+  \item \textbf{detekcija grešaka}  - dodavanje kontrolnih bitova\\
+  Naivni pristup podrazumeva da pri slanju svakog okvira šaljemo i njegovu kopiju. Kopija služi za detekciju grešaka. Moć detekcije je jako dobra, detektuje se veliki broj grešaka, ali je loše jer se mnogo podataka koristi samo za detekciju grešaka. Može da se desi greška baš u istom bitu i originala i kopije. Ali, cilj detekcije grešaka je da se razreši što više grešaka (fokus je na onim greškama nastalim kao posledica šuma), a da se pritom koristi što manje bitova.
+  \item \textbf{kodovi za korekciju grešaka} - dodavanje još bitova koje omugućavaju korekciju\\
+  ------------------------dopuni----------------------\\
+  Kodna reč se sastoji od $D$ bitova podataka i $R$ kontrolnih bitova. Pošiljalac izračuna $R$ kontrolnih bitova kao funkciju od $D$ i potom šalje svih $D+R$ bitova. Primalac prihvata $D+R$ sa potencijalnim greškama na bilo kom od bitova. Računa $R_{2}$ kontrolnih bitova na osnovu $D$ po istom algoritmu kao pošiljalac. Greška se javila ukoliko $R$ nije isto kao $R_{2}$.\\
+  ----------------------------------------------\\
+  Intuicija iza kodova za greške?\\
+  Imamo mnogo manji skup validnih kodnih reči u odnosu na skup svih mogućih reči. Ukoliko imamo N bitova, onda imamo $2^{N}$ mogućih reči. Ako $R < N$ bitova (predstavljaju bitove za grešku), onda je skup validnih reči $2^{N-R} $. Kada pošiljalac pošalje validnu kodnu reč koliko je šansa da, ako je došlo do greške, to opet bude validna reč? Slučajno odabrana reč ima malu šansu da bude i validna $ \Rightarrow $ mala šansa da će se desiti greška i da će nakon toga reč i dalje biti validna. Nadudavanjem prostora redudantnih reči smanjujemo verovatnoću za nastajanje greške.
+\end{itemize} 
+\subsection{Hamingovo rastojanje}
+\textit{Hamingovo rastojanje} je minimalan broj inverzija bitova potrebnih da se od jedne reči dobije neka druga reč. \\
+\textit{Hamingovo rastojanje koda} je minimalno Hamingovo rastojanje između svih parova validnih kodnih reči.\\
+Ukoliko imamo validne reči:
+\begin{center}
+111000\\
+111111\\
+000000\\
+000111
+\end{center}
+shvatamo da imamo $ 2^{6} $ mogućih reči, od kojih su samo 4 validne. To znači da ako želim da šaljem poruke, jedine poruke koje mogu da pošaljem su ove 4 reči. Prva može da predstavi 0, druga može 1, itd. To znači da se preslikavaju skupovi bitova u neku vrednost. Na drugoj strani znamo skup validnih reči, tako da možemo da detektujemo grešku. \\
+
+Šta je najveća greška koju možemo da detektujemo?\\
+Hamingovo rastojanje ovih validnih reči je 3 (mora da se napravi minimum 3 inverzije da bi se iz jedne reči prešlo u drugu).
+Na primer, ako se u reči 111000 desi na dva bita greška, pa dobijemo recimo reč 101010, možemo da utvrdimo da ova reč nije validna. Ali ako se, na primer, za reč 000111 desi trobitna greška, pa dobijemo reč 000000, onda ne možemo da utvrdimo da je došlo do greške. $ \Rightarrow $ za trobitne greške ne možemo da detektujemo grešku.\\
+\textbf{Da bi se pouzdano otkrilo do $d$ grešaka, Hamingovo rastojanje koda mora biti najmanje $d+1$!}. Drugi način definisanja: ako je H.r. $d$ onda možemo da detektujemo $d-1$bitnu grešku.\\
+Ovo nije efikasan algoritam, ali je teorijski dobar. Ima veliku redudantnost, tj. koristili smo 6 bitova da predstavimo samo 4 vrednosti. Primalac mora da prolazi kroz ceo spisak validnih reči kada čita podatke, što nije efikasno.\\
+
+Kolika je najveća greška koja se može korektovati?\\
+Ako se pri greški pojavi reč koja je susedna nekoj validnoj reči, ja verovatno mogu da pretpostavim, za Ham. rast. 3, da mogu da ispravim jednobitnu grešku. Samo nađem najbližu susednu validnu reč i našli smo korekciju. Ako se naiđe na reč iz većeg susedstva, odnosno greška veća od jednog  bita, onda ne mogu da odradim korekciju. \\
+\textbf{Za kod sa Hamingovim rastojanjem $2d+1$ najviše $d$ grešaka se uvek može ispraviti do najbliže ispravne validne reči.} Drugi način definisanja: ako je H.r. $d$, onda najveća greška koja može da se ispravi je $\lfloor d/2 \rfloor$.
+
 \section{Detekcija grešaka u sloju veze}
+(preuzeto iz beleški sa predavanja)\\
+
+Detekcija omogućava samo indirektnu  popravku jer zahteva retransmisiju. Koristimo tri algoritma u praksi:
+\begin{itemize}
+  \item Provera parnosti
+  \item Kontrolni zbirovi
+  \item Ciklične provere redudanse CRC
+\end{itemize}
+\subsection{Provera parnosti}
+Retko se koristi jer ima slabu moć, odnosno samo za jednobitne greške radi.\\
+Za D bitova podataka, dodamo jedan kontrolni bit koji predstavlja sumu bitova podataka. Suma je bez prenosa, odnosno suma po modulu 2. Moć ove tehnike je uslovljena Hamingovim rastojanjem. \\
+Ako imamo podatak 0101, dodajemo 0 na kraj kao kontrolni bit za proveru parnosti. Skup validnih reči je $ 2^{4} $. Hamingovo rastojanje je 2 (mora da se menja i bit za proveru parnosti), pa je moć detekcije jedan. \\
+ Problem je što loše radi za rafalne greške. Postoji 50\% šanse da se sa ovim algoritmom detektuje dvobitna ili višebitna greška.
+ 
+\subsection{Kontrolni zbirovi}
+Koriste se za rafalne greške. Problem kod rafalnih grešaka je što se one dešavaju uzastopno.\\
+Možemo da preuredimo naše bitove. Ne posmatramo bit po bit, nego imamo bafer gde možemo da prepakujemo bitove po kolonama i posle N bitova stavimo novu kolonu. Time dobijamo da se rafalne greške preraspodele u posebne kolone i onda radimo provere parnosti po redovima. 
+\subsection{CRC}
+Koristi se i za ravnomerne i za rafalne greške. Ima mali broj dodatnih bitova, a detektuje i četvorobitne greške.
 \section{Korekcija grešaka u sloju veze}
+uskoro
 \section{Sloj veze, tipovi servisa, okruženje, utopijski jednosmerni protokol}
+uskoro
 \section{Kontrola toka, ARQ, pauze (tajmauti), duplikati, protokol „stani i čekaj“ za savršen i nesavršen kanal}
+Kontrola toka je sinhronizacija komunikacije između pošiljaoca i primaoca. Primaoc ne sme da bude zatrpan od strane pošiljaoca.
 \section{Protokol kliznih prozora u sloju veze, „1-bitni“, „vrati se N“, „selektivno ponavljanje“}
 \section{MAC podsloj, uloga, alokacija kanala, ALOHA protokol}
 \section{CSMA, CSMA/CD, BEB}
 \section{MAC protokoli zasnovani na redosledu, Token Ring}
 \section{MAC protokoli za bežične mreže}
 \section{Klasični Eternet}
-\section{Moderni (komutirani) Eternet. i na sloju veze}
+\section{Moderni (komutirani) Eternet}
 
 \end{document} % The document ends here
