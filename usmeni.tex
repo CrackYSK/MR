@@ -550,8 +550,113 @@ uskoro
 uskoro
 \section{Kontrola toka, ARQ, pauze (tajmauti), duplikati, protokol „stani i čekaj“ za savršen i nesavršen kanal}
 Kontrola toka je sinhronizacija komunikacije između pošiljaoca i primaoca. Primaoc ne sme da bude zatrpan od strane pošiljaoca.
+
 \section{Protokol kliznih prozora u sloju veze, „1-bitni“, „vrati se N“, „selektivno ponavljanje“}
+
+\subsection{Protokol kliznih prozora u sloju veze}
+
+Uop\v{s}tenje protokola "stani i \v{c}ekaj". Omogu\'{c}ava da u svakom momentu W okvira bude u kanalu. W okvira za RTT (\textit{round trip time} - vreme potrebno da okvir ode i da stigne potvrda za njega).\\
+Svakom okviru se dodeljuje redni broj, na osnovu kog se identifikuje. Po\v{s}iljalac i primalac imaju opseg u okviru kog primaju okvire.\\
+Po\v{s}iljac ima na raspolaganju W okvira koje mo\v{z}e da po\v{s}alje. Mora da ih baferuje zbog eventualne retransmisije. Sa pristiglim \textit{ack}-ovima po\v{s}iljalac pomera prozor.\\
+Primalac ima na raspolaganju prostor za nekoliko okvira koje mo\v{z}e da prihvati. Mora da poseduje bafer za njih. Kako sti\v{z}u novi okviri prozor se pomera.\\
+\begin{center}
+	\includegraphics[scale=0.5]{klizni_prozor}
+\end{center}
+Ve\'{c}i prozori omogu\'{c}avaju proto\v{c}nu odbranu za efikasniju upotrebu kanala. Stani i \v{c}ekaj (W=1) je neefikasan, posebno za du\v{z}e kanale (po\v{s}iljalac \v{s}alje okvir i \v{c}eka potvrdu o prijemu). \v{Z}elim da va\v{z}i $ W \geq{} 2BD + 1 $ u cilju \v{s}to boljeg iskori\v{s}\'{c}enja.
+
+\subsection{"1-bitni"}
+
+Protokol kliznih prozora maksimalne veli\v{c}ine 1. Nema odvojenih algoritama za po\v{s}iljaoca i primaoca, jer sada i jedan i drugi mogu da \v{s}alju i primaju. Za \textit{ack} koristimo okvir iz suprotnog pravca ("\v{s}lepanje").
+
+\begin{center}
+\includegraphics[scale=0.7]{1-bitni-kod}
+\end{center}
+Ovaj algoritam radi korektno, ali mo\v{z}e do\'{c}i do usporenja ukoliko istovremeno zapo\v{c}nu slanje, jer \'{c}e tako biti izostavljen \textit{ack}, te \'{c}e biti ponovljenih slanja.
+
+\subsection{"Vrati se N"}
+
+Primalac prihvata samo okvire koji sti\v{z}u redom, odbacuje sve koji uslede nakon spornog (okvira koji nije primljen ispravno). Nakon \v{s}to tajmoutuje, ponavljaju se svi nepotvr\dj{}eni okviri do kraja prozora.
+
+\begin{center}
+\includegraphics[scale=0.4]{vrati-n}
+\end{center}
+Jednostavan algoritam na strani primaoca, potreban mu je bafer za samo jedan okvir. Nepotrebno tro\v{s}enje protoka u slu\v{c}aju velikih prozora, u najgorem slu\v{c}aju je potrebno ponoviti slanje celog prozora.
+
+\subsection{"Selektivno ponavljanje"}
+
+Primalac prihvata okvir sve dok je redni broj okvira u opsegu definisanom kliznim prozorom. Negativni \textit{ack} informi\v{s}e po\v{s}iljaoca da ponovo po\v{s}alje problemati\v{c}ni okvir, pre isteka tajmauta za ceo prozor.
+
+\begin{center}
+\includegraphics[scale=0.4]{selektivno-ponavljanje}
+\end{center}
+Slo\v{z}eniji je za implementaciju od "vrati se N" zbog baferisanja pri primanju i vi\v{s}estrukih tajmera pri slanju. Efikasnija upotreba protoka, jer se sada \v{s}alju ponovo samo izgubljeni okviri.\\
+Opseg brojeva okvira mora biti barem dva puta ve\'{c}i od veli\v{c}ine prozora kako bi se izbegli problemi sa retransimisijom okvira.
+
+\begin{center}
+\includegraphics[scale=0.4]{selektivno-zahtevi}
+\end{center}
+
+U prvom slu\v{c}aju, primalac nakon prijema prvih 7 okvira, o\v{c}ekuje okvire 7, 0, 1, 2, 3, 4, i 5, \v{s}to je u konfliktu sa paketima koji su ve\'{c} primljeni. Ako bi po\v{s}iljalac iz nekog razloga ponovio slanje prethodnih paketa, oni bi ponovo bili pogre\v{s}no prihva\'{c}eni i prosle\dj{}eni mre\v{z}nom sloju. U drugom slu\v{c}aju se ovo ne mo\v{z}e desiti.
+
 \section{MAC podsloj, uloga, alokacija kanala, ALOHA protokol}
+
+\subsection{MAC podsloj, uloga}
+
+U svakoj mre\v{z}i u kojoj se koristi neusmereno emitovanje, glavni problem je kako odrediti ko \'{c}e koristiti kanal u situaciji kada ima vi\v{s}e zahteva. Protokoli kojima se odre\dj{}uje slede\'{c}i korisnik takvog kanala pripadaju podsloju sloja veze podataka, poznatom kao podsloj za \textbf{upravljanje pristupom medijumima} (\textit{Medium Access Control, MAC}. Protokol MAC je posebno va\v{z}an za lokalne mre\v{z}e u kojima se za komuniciranje naj\v{c}e\v{s}\'{c}e koristi kanal sa slobodnim pristupanjem.
+
+\subsection{Alokacija kanala}
+
+\begin{enumerate}
+	\item Stati\v{c}ko dodeljivanje kanala
+	\item Dinami\v{c}ko dodeljivanje kanala
+\end{enumerate}
+
+\subsubsection{Stati\v{c}ko dodeljivanje kanala}
+
+Klasi\v{c}an na\v{c}in dodeljivanja jedinstvenog kanala jednom od kandidata na njega je multipleksiranje podelom frekvencije (FDM). Ukoliko postoji $N$ potencijalnih korisnika, propusni opseg se deli na $N$ jednakih delova, po jedan za svakog korisnika. Tako se korisnici ne ometaju me\dj{}usobno. Kada je broj po\v{s}iljalaca veliki ili se stalno menja, tehnika FDM ne zadovoljava. Tako\dj{}e, ako u nekom trenutku \v{z}eli da komunicira manje od $N$ korisnika, veliki deo opsega ostaje neiskori\v{s}\'{c}en. Suprotno, ukoliko vi\v{s}e korisnika \v{z}eli da komunicira, neki od njih nece mo\'{c}i. Drugi metod, sa sli\v{c}nim karakteristikama je TDM (multipleksiranje podelom vremena).
+
+\subsubsection{Dinami\v{c}ko dodeljivanje kanala}
+
+Da bi se razumeo problem, potrebno je sagledati pet osnovnih pretpostavki:
+\begin{enumerate}
+	\item Model stanica - model sadr\v{z}i $N$ nezavisnih stanica;
+	\item Pretpostavka o jedinstvenom kanalu - za sve komunikacije na raspolaganju je jedan kanal;
+	\item Pretpostavka o sukobljavanju - ako se dva okvira istovremeno emituju, oni se vremenski preklapaju \v{s}to rezultuje izobli\v{c}enim signalom. Ovaj doga\dj{}aj naziva se \textbf{sukobljavanje};
+	\item Vremenski tok:
+	\begin{itemize}
+		\item Neprekidan vremenski tok - paket se mo\v{z}e poslati u bilo kom trenutku;
+		\item Raspore\dj{}eno vreme - vreme podeljeno u intervale odre\dj{}ene veli\v{c}ine, slanje se podudara sa po\v{c}etkom intervala;
+	\end{itemize}
+	\item Pona\v{s}nje stanica:
+	\begin{itemize}
+		\item Oslu\v{s}kivanje saobra\'{c}aja na nosiocu podataka - pre upotrebe kanala, stanica mo\v{z}e proveriti da li je slobodan;
+		\item Nema oslu\v{s}kivanja saobra\'{c}anja na nosiocu podataka - stanice ne proveravaju da li je kanal prazan, ve\'{c} odmah emituju okvire. Tek kasnije se utvr\dj{}uje da li je prenos uspe\v{s}an.
+	\end{itemize}
+\end{enumerate}
+Za stavke 4 i 5 va\v{z}i jedna od dve postoje\'{c}e mogu\'{c}nosti.
+
+\subsection{ALOHA protokol}
+
+Nastao po ugledu na ra\v{c}unarsku mre\v{z}u koja je povezivala Havajska ostrva '60-ih godina. Postoje dve verzije sistema ALOHA:
+\begin{itemize}
+	\item \v{C}ista ALOHA
+	\item Vremenski raspodeljena ALOHA
+\end{itemize}
+
+\subsubsection{\v{C}ista ALOHA}
+
+Po\v{c}iva na jednostavnoj ideji, dozvoliti korisnicima da emituju uvek kada imaju podatke za slanje. Naravno, bi\'{c}e sukobljavanja, ali \'{c}e iz povratnih informacija po\v{s}iljalac jasno videti da je njegov okvir uni\v{s}ten. Kada utvrdi da je poslati okvir o\v{s}te\'{c}en, po\v{s}iljalac \'{c}e slu\v{c}ajno izabran period vremena sa\v{c}ekati eventualnu potvrdu prijema i nakon toga ponovo poslati okvir. Vreme \v{c}ekanja se bira nasumi\v{c}no kako bi se smanjila \v{s}ansa ponovnog sukoba istih paketa.
+
+\begin{center}
+	\includegraphics[scale=0.5]{aloha}
+\end{center}
+
+Osnovne karakteristike su mu jednostavnost i decentralizovanost. Ovaj algoritam se pokazuje kao prihvatljivo re\v{s}enje kada je malo optere\'{c}enje mre\v{z}e. Me\dj{}utim, algoritam ima lo\v{s}e karakteristike sa uve\'{c}anjem optere\'{c}enja mre\v{z}e. Eksperimentalno utvr\dj{}eno da 18\% okvira pro\dj{}e na drugu stranu.
+
+\subsubsection{Vremenski raspore\dj{}ena ALOHA}
+
+Kod vremenski raspodeljene neophodno je sinhronizovanje globalnog vremena. To se obi\v{c}no posti\v{z}e tako \v{s}to jedna stanica u predodre\dj{}enom intervalu \v{s}alje poseban signal. Time se vreme deli na intervale kona\v{c}ne du\v{z}ine. Emitovanje je dozvoljeno samo na po\v{c}etku intervala. Time se smanjuje verovatno\'{c}a da do\dj{}e do sukoba. Uspe\v{s}nost ovog algoritma je eksperimentalno utvr\dj{}ena i iznosi 36\%.
+
 \section{CSMA, CSMA/CD, BEB}
 \section{MAC protokoli zasnovani na redosledu, Token Ring}
 \section{MAC protokoli za bežične mreže}
