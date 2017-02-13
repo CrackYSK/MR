@@ -557,5 +557,202 @@ Kontrola toka je sinhronizacija komunikacije između pošiljaoca i primaoca. Pri
 \section{MAC protokoli za bežične mreže}
 \section{Klasični Eternet}
 \section{Moderni (komutirani) Eternet}
+\section{Mrežni sloj, uloga, motivacija, rutiranje i prosleđivanje (ukratko), tipovi servisa na mrežnom sloju, objašnjenja i njihov uporedni odnos}
+\section{IP adrese i prefiksi}
+Internet se u mreznom sloju moze posmatrati kao skup medjusobno povezanih podmreza ili autonomnih sistema. Kombinovana mreza nema odredjenu strukturu , osim veceg broja velikih okosnica koje se sastoje od linija velike propusne moci I brzih usmerivaca. Na okosnice su prikljucene regionalne mreze ,a za njih se vezuju lokalne mreze univerziteta, kompanija I davalaca Internet uluga.\\
 
+\begin{center}
+\includegraphics[width=12cm, height=6cm]{okosnica}\\
+\end{center}
+Citav Internet na okupu drzi protokol mreznog sloja tzv. \textbf{Protokol IP}. Njegov zadatak je da na najbolji moguci nacin obezbedi prenos datagrama od izvorista do odredista, bez obzira da li se racunari nalaze na istoj mrezi ili se I druge mreze nalaze izmedju njih.\\
+
+Na Internetu se komunicira na sledeci nacin. Transportni sloj preuzima tokove podataka I deli ih u datagrame. Svaki datagram se prenosi Internetom I mozda usput deli I na  manje fragmente. Mrezni sloj od njih sklapa originalni datagram, kad svi delovi stignu. Zatim se taj datagram predaje transportnom sloju koji ga umece u ulazni tok procesa za prihvatanje podataka kod primaoca.\\
+
+IP datagram sadrzi zaglavlje (fiksni deo duzine 20 bajtova I opcioni deo promenljive duzine) I tekstualni deo. Format zaglavlja prikazan na slici ispod. Ono se prenosi redosledom  “big-endian” sleva udesno, pri cemu prvo ide najznacajniji bit polja Verzija (tu je oznacena verzija protokola kome pripada datagram), zatim IHL (Internet header length) belezi se duzina zagavlja u 32-bitnim recima, vrsta usluge, ukupna duzina, identifikacija (odredisni racunar odredjuje kom  datagramu pripada pristigli fragment), redni broj fragmenta, zivotni vek (ogranicava trajanje paketa na mrezi), protokol (proces kome paket treba predati, taj proces moze biti protokol TCP, UDP…), kontrolni zbir zaglavlja(koristi se za proveru gresaka izazvanih neispravnim memorijskim recima usmerivaca . Algoritam radi tako sto se aritmetikom nepotpunih komplemenata sabiraju sve 16-bitne polureci onako kako pristizu, a zatim se od rezultata odbije nepotpuni komplement. Jednak nuli ako nema greske), izvorisna adresa I odredisna adresa ukazuju na broj mreze I broj racunara, opcije.
+\subsection{IP adrese}
+Citava Internet na okupu drzi protokol mreznog sloja, tzv. protokol IP.
+Svaki racunar i svaki usmeravac na Internetu imaju svoju IP adresu koja obuhvata broj njihove mreze i broj racunara. Ta komb. je jednistvena, dva racunara u nacelu ne mogu imati istu IP adresu. IP adresa se ne odnosi na racunar,  vec na mrezni interfejs, pa ako se racunar nalazi u dve mreze, mora imati dve IP adrese. Koriste se u poljima izvorisna adresa I odredisna adresa. \\
+
+Vec vise decenija IP adrese se dele u pet kategorija, prikazanih na slici:
+ \begin{center}
+\includegraphics[width=12cm, height=6cm]{klasnoAdr}\\
+\end{center}
+ Takva podela se naziva klasno adresiranje. Vise se ne koristi. Da bi se izbegli sukobi, brojevi mreza dodeljuje neprofitna \textbf{Korporacija za dodeljivanje imena i brojeva na Internetu (ICANN)}.
+IPv4 adresa koristi 32-bitnu adresu, a  IPv6 koristi 128-bitnu adresu.\\
+
+Notacija u vidu kvarteta dekadnih brojeva:\\
+ - cetiri 8-bitna broja odvojena tackama – svaka od 4 bajta pise se decimalno 
+ \begin{center}
+\includegraphics[width=12cm, height=3cm]{IPadresa}\\
+\end{center}
+Adresu 0.0.0.0 koriste racunari u fazi ukljucivanja. IP adresa s mreznim brojem 0 oznacava tekucu mrezu. Takve adrese omogucavaju racunarima da adresiraju sopstvene mreze iako joj ne znaju broj. Adresa koja se sastoji samo od jedinica omogucava neusmereno emitovanje u lokalnoj mrezi.
+ \begin{center}
+\includegraphics[width=12cm, height=6cm]{specijalneIP}\\
+\end{center}
+
+\subsection{Prefiksi}
+IP adrese su hijerarhijski, za razliku od Ethernet adrese. Svaka 32-bitna adresa
+se sastoji od mreznog dela promenljive dužine (gornji bitovi) i dela Host
+(donji bitovi). mrezni deo ima istu vrednost za sve Host delove na jednoj
+mreži, kao što je Ethernet LAN. \\
+
+Adrese se grupisu u blokove koje se nazivaju \textbf{prefiksi}.
+\begin{itemize}
+  \item \textbf{L-bitni prefiks} je grupa adresa koje imaju isti prefiks duzine L bita
+ \item to znaci da L-bitni prefiks ima $2^{32-L}$ razlicitih adresa
+prefiksi opisuju mreze racunara odnose opsege adresa 
+ \item Prefiksi se pisu zadavanjem najnize IP adrese u bloku i velicine bloka.
+\end{itemize}
+ \begin{center}
+\includegraphics[width=12cm, height=3cm]{prefiks}\\
+\end{center}
+Notacija olika "IP adresa/duzina prefiksa"\\
+\begin{itemize}
+  \item npr. 128.13.0.0/16 je opseg 128.13.0.0. do 128.13.255.255
+  \item prefiks oblika /24 odgovara opsegu sa 256 adresa dok /32 odgovara jedinstvenoj adresi\\
+ adresa pripada razlicitim prefiksima
+ \begin{center}
+\includegraphics[width=12cm, height=3cm]{prefiks2}\\
+\end{center}
+\item \textbf{vise sprecifican prefiks} je duzi prefiks jer blize odredjuje opseg oko te adrese
+\item \textbf{manje sprecifican prefiks} je kraci prefiks . KOji je najmanje sprecifican?
+\begin{center}
+\includegraphics[width=12cm, height=3cm]{prefiks3}\\
+\end{center}
+\end{itemize}
+
+\subsection{IP klase adresa - stari sistem grupisanja}
+
+ Ranije su IP adrrse bile grupisane u klase adresa fiksne duzine.\\
+Klasa C je npr. adekvatna za lokalne mreze 
+\begin{center}
+\includegraphics[width=12cm, height=3cm]{ranije}\\
+\end{center}
+\subsection{Javne/ privatne IP adrese}
+Javna IP adresa npr. 18.31.0.1
+\begin{itemize}
+  \item jedinstvena oznaka racunara na Internetu
+\item mora se dodeliti pre upotrebe (regularno telo)
+\item vecim delom potrosene... dolazi vvreme za prelazak na IPv6
+\end{itemize}
+Privatne IP adrese
+\begin{itemize}
+  \item nisu globalno jednistvene
+\item jesu jednistvene na novou manjih mreza, npr. u mrezi firme, kucne lokalne mreze..
+\item primeri: 10.0.0.0/8, 192.168.0.0/16
+\item potrebna je javna bar jedna javna IP adresa i NAT da bi se iz ovakvih mreza povezali na Internet
+\end{itemize}
+\subsection{Dodeljivanje javnih IP adresa}
+Hijerarhijski proces
+\begin{itemize}
+  \item IANA je svetsko regulatorno telo  - dodeljuje ceo opseg adresa reg. telima
+\item Regionala tela dodeljuju osege kompanijama u regionu
+\item Kompanije dodeljuju konkretnim racunarima
+ \begin{center}
+\includegraphics[width=12cm, height=3cm]{IANA}
+\end{center}
+\end{itemize}
+
+Kljucna prednost prefiksa je da ruteri mogu proslediti pakete na osnovu samo
+mreznog dela adrese. Deo Host nije bitan ruteru jer su svi Host ista mreža pa  ce bitii poslani u istom pravcu. Kad se paketi dostave mrezi, tek tada ce biti usmereni ka ciljnom Hostu.\\
+
+Ovo čini matrice tabele mnogo manje nego što bi inače
+bila.  Uzmite u obzir da je broj Hostova na Internetu priblizno jednu milijardu.
+To bi bio veoma velika tabela za svaki ruter. Medjutim, koristecci
+hijerarhija, ruteri treba da zadrži rute za samo oko 300.000 prefiksa.
+\subsection{Podmreze}
+Svi racunari na istoj mrezi moraju imati isti mrezni broj. To pravilo IP adresiranja moze da stvori probleme tokom rasta mreze. Resenje je nadjeno u tome da se mreza interno podeli na vise delova, ali da za spoljni svet ostane celovita.\\
+ 
+U literaturi o Internetu, delovi mreze zovu se \textbf{podmreze}.\\
+
+Kada paket stigne u glavni usmerivac, kako ovaj zna na koju podmrezu da ga postavi? Glavni usmerivac bi mogao da ima tabelu sa 65.536 odrednica za svaki racunar/usmerivac na univerzitetu. To bi radilo, ali tabela bi bila prevelika i trebalo bi je cesto ruucno odrzavati. Zato se u praksi primenjuje druga sema. Umesto da se zadrzi jednistvena adresa klase B sa 14 bitova za mrezu i 16 bitova za racunar, od racunarskih bitova se jedan deo uzima za oznacavanje podmreze. Na primer, koristi se 6-bitni broj za podmreze i 10-bitni broj za racunare. Da bi se ugradile podmreze, glavni usmerivac treba da ima masku podmreze koja naznacava podelu adrese izmedju mreze + podmreze i racunara. Maska podmreze se takodje pise decimalnom notacijom s tackom, s tim sto se bitovi koji znacavaju mrezu i podmrezu razdvajaju kosom crtom od bitova koji oznacavaju racunar. 
+ \begin{center}
+\includegraphics[width=12cm, height=4cm]{maskaPodmreze}\\
+\end{center}
+
+\section{IP prosleđivanje}
+\begin{itemize}
+  \item Sve IP adrese jedne mreze pripadaju istom prefiksu
+\item Svaki usmerivac poseduje tabelu uredjenih parova oblika (prefiks, sledeci cvor - hop)
+\item Zasto ne (ciljna adresa, sledeci cvor)?
+ \begin{center}
+\includegraphics[width=12cm, height=4cm]{prosledjivanje}\\
+\end{center}
+\end{itemize}
+Niko ne zna koliko mreze je  povezano sa Internetom vise, ali to je veliki broj, verovatno najmanje milion. Ovo moze biti veoma veliki tabela. To mozda ne zvuči velika prema racunarskim standardima, ali treba imati u vidu  da ruteri moraju pretraziti ovu  tabeli da bi prosledili svaki paket.  Samo fizicko skladistenje ovakve tabele je izvodljivo, premda skupo resenje za kriticne rutere koji tabele cuvaju u statickom RAM-u na ulazno-izlaznim kartcama. Ozbiljniji problem je sto slozenost raznih algoritama koji rade s tabelama ne rasste linearno s duzinom tabele vec brze. Osim toga, neki algoritmi za usmeravanje zahtevaju da svaki ruter povremeno emituje svoju tabelu, pa moze doci do toga da se neki deo usput izgubi I na taj nacin se onemogucava dobijanje potpunih podataka. \\
+
+Problem tabele za usmeravanje mogao bi se resiti produzavanjem hijerarhije, tj. Kada bi  , na primer, svaka IP adresa sadrzala polje za drzavu, pokrajinu, grad, mrezu, racunar . Tada bi svaki ruter jedino mora da zna kako da podatke isporuci svakoj stranoj drzavi, pokrajini u svojoj zemlji, gradovima u tim pokrajinama, mrezama u tim gradovima. To bi zahtevalo IP adresu mnogo duzu od 32 bita I neefikasno bi koristila adresni proctor.\\
+
+Resenje koje je realizovano I koje je Interentu omogucilo da za neko vreme predahne zove se besklasno medjudomensko usmeravanje (CIDR). \\
+Osnovna zamisao je bila da se preostali nedodeljen adresni proctor podeli u blokove razlicite velicine, ne vodeci racuna o klasama.\\
+Sa sistemom CIDR, svaka ciljna tabela za usmeravanje prosiruje se 32-bitnom maskom - prefiksom. Tako nastaje jedinstvena tabela usmeravanja za sve mreze, koja se sastoji od niza tripleta, IP adresa, prefiks, izlazna linija. Kada paket stigne , najpre se iz njega izvlaci IP adresa. Zatim se tabela usmeravanja pregleda, maskiranjem ciljne adrese I poredjenjem sa ciljnim adresama u tabeli da bi se pronasal odgovarajuca. Ako se nadje vise odgovarajucih ciljnih adresa koje se razlikuju samo po duzini prefiksa, koristi se ona sa najduzim prefiksom. Na primer, ako se sa ciljnom adresom slazu adrese sa prefiksom /20 I /24, izabrati onu a prefiksom /24. 
+ \begin{center}
+\includegraphics[width=12cm, height=4cm]{najduziPrefiks}\\
+\end{center}
+Sa slajda:
+\begin{itemize}
+  \item prefiksi u tabeli se mogu preklapati!
+\item Pravilo najduzeg odg. prefiksa:\\
+1. Za svaki paket, pronadji najduzi prefiks koji sadrzi ciljnu adresu, odnosno najspecificniji prefiks\\
+2. Poslediti paket cvoru koji odgovara tom prefiksu 
+   \begin{center}
+\includegraphics[width=12cm, height=4cm]{najduziPrefiks1}\\
+\end{center}
+
+\end{itemize}
+Primer sa prefiksom:
+ \begin{center}
+\includegraphics[width=12cm, height=12cm]{primerPrefiks1}\\
+\end{center}
+ \begin{center}
+\includegraphics[width=12cm, height=12cm]{primerPrefiks2}\\
+\end{center}
+ \begin{center}
+\includegraphics[width=10cm, height=5cm]{primerPrefiks3}\\
+\end{center}
+
+\section{ARP i DHCP}
+\subsection{ARC protokol za razresavanje adresa}
+ako svaki racunar na Internetu ima jednu (ili vise) IP adresa, one se u stvari ne mogu koristiti za slanje paketa jer hardver sloja veze podataka ne razume Internet adrese. Danas su racunari u vecini kompanija I univerziteta povezani u lokalne mreze preko mrezne kartice koja razume samo lokalne adrese. Na primer, Ethernet kartice oduvek imaju ugradjenu 48-bitnu Ethernet adresu. Proizvodjaci Ethernet katica zahtevaju od centralne ovlascene organizacije da im dodeli blok adresa kako bi svaka kartica imala jedinstvenu adresu. Kartice salju I primaju okvire zasnovane na 48-bitnim Ethernet adresama. One ne znaju nista o 32-bitnim IP adresama.\\
+
+Sada se postavlja pitanje: kako se IP adrese preslikavaju u adrese sloja veze podataka, npr. U Ethernet adrese, tj. Kako cvor, na osnovu ciljne IP adrese, da se sazna adresu u sloju veze kako bi poslao okvire na odgovarajuci cvor?
+ \begin{center}
+\includegraphics[width=10cm, height=3cm]{slojVeze}\\
+\end{center}
+Opis protokola(jenostavan):\\
+1. Cvor koji hoce da sazna emituje ID adresu\\
+2. Onaj koji ima tu adresu za svoju izvornu, vraca mu odgovor sa svojom adresom u sloju veze
+ \begin{center}
+\includegraphics[width=10cm, height=4cm]{arp}\\
+\end{center}
+Primer sa univerzitetom
+Imamo mali univerzitet kojim ima nekoliko mreza klasa C(sada zvanih /24), tu imamo 2 Ethernet mreze, jednu sa IP adresom 191.31.65.0 I drugu  sa IP adresom 191.31.63.0. Svaki racunar na Ethernet mrezi ima jedinstvenu Ethernet adresu, oznacenu sa E1 do E6. Racunar 1 difuzno emituje paket na Ethernet pitajuci : Ko ima IP adresu 192.31.65.5? Pitanje ce stici do svakog racunara na Ethernet mrezi 192.31.65.0 I svaki ce proveriti svoju IP adresu. Samo ce racunar2 odgovoriti sa svojom Ethernet adresom (E2). Protokol kojim se ovakovo pitanje salje I na njega dobija odgovor se naziva protokol za razresavanje adresa.
+ \begin{center}
+\includegraphics[width=12cm, height=15cm]{primerARP}\\
+\end{center}
+Prednost ovog protokola je jednostavnost njegovog koriscenja. Administratop sistema treba svakom racunara da dodeli IP adresu I odluci o prefiksu(bloku mreze), sve ostalo radi ARP.\\
+U ovoj fazi, IP softver na racunaru1 pravi Ethernet okvir adresiran na E2, smesta IP paket u polje za korisnicke podatke I salje na Ethernet. Ethernet kartica racunara2 otkriva ovaj okvir.\\
+Jedna od optimizacija bi bila da racunar koji izvrsi protokol ARP cuva rezultat za slucaj da uskoro treba da ponovo stupi u vezi sa istim racunarom (pronadje uparene adrese u sopstvenom kesu).
+\subsection{DHCP Protokol za dinamicko podesavanje racunara}
+Javlja se problem dodeljivanja IP adrese u mrezi. Tek podignuti cvor trazi svoju IP adresu. Postavlja se pitanje: koja je njegova IP adresa, koja je IP adresa njegovog usmerivaca itd.\\
+Ethernet adresa se fabricki zadaje, ali IP adresa ne.
+ \begin{center}
+\includegraphics[width=8cm, height=3cm]{dhcp}\\
+\end{center}
+Protokol DHCP omogucava I rucno I automatski dodeljivanje IP adresa. Protokol DHCP se oslanja na specijalan server koji dodeljuje IP adrese onim racunarima koji ih trazi. Taj server ne mora da bude na istoj lokalnoj strani kao I racunar koji zahteva adresu. \\
+Sa DHCP, svaka mreza mora da ima DHCP server koji je ogovoran za konfiguraciju.\\
+1. Cvor emituje paket (DISCOVER package, koji mora da dodje do DHCP servera) celoj mrezi (specijalana adresa za emitovanje je 255.255.255.255) \\
+2. DHCP odgovara cvoru ciljano na osnovu MAC adrese sa predlozenom IP adresom u okviru OFFER package\\
+3. Cvor emituje odgovor da mu odgovara predlozena adresa (moze da bude vise DHCP-ova)\\
+4. DHCP potvrdjuje I brise adresu iz spiska slobodnih IP adresa
+ \begin{center}
+\includegraphics[width=8cm, height=3cm]{dhcp2}\\
+\end{center}
+Klijent moze I da obnovi vec dodeljenu IP adresu ako je ranije dobio, salje samo REQUEST I dobija ACK.\\
+Protokol takodje omogucava paralelan rad vise repliciranih DHCP servera :
+zarad pouzdanosti I efikasnosti i REQUEST se emituje tako da su sinhronizovani\\
+Pitanje koje se namece sa automatskim dodeljivanje IP adrese iz zajednickog skladista koliko dugo IP adresa treba da bude dodeljena. Ako se racunar iskljuci sa  mreze i ne vrati svoju IP adresu DHCP serveru, ona se nepovratno gubi. Posle nekog vremena, mnoge adrese mogu biti izgubljena. Da bi se  sprečilo to, dodeljivanje IP adresa se dodeljuju na određeni vremenski period, tehnika se zove iznajmljivanje(eng.leasing). Neposredno pre isteka zakupa, racunar mora da traži DHCP obnovljanje najma. Ako to ne ucini ili zahtev bude odbijen, racunar ne  moze  više ne koriste tu IP adresu.
+\section{ICMP i NAT}
+\section{Rutiranje, mehanizmi alokacije protoka, modeli isporuke, ciljevi rutiranja, principi dizajna algoritama rutiranja, rutiranje sa najkraćim putevima (najmanjim troškom), Dijkstrin algoritam}
+\section{Rutiranje zasnovano na vektoru razdaljine}
 \end{document} % The document ends here
