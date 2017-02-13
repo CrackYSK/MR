@@ -541,9 +541,30 @@ Ako imamo podatak 0101, dodajemo 0 na kraj kao kontrolni bit za proveru parnosti
  
 \subsection{Kontrolni zbirovi}
 Koriste se za rafalne greške. Problem kod rafalnih grešaka je što se one dešavaju uzastopno.\\
-Možemo da preuredimo naše bitove. Ne posmatramo bit po bit, nego imamo bafer gde možemo da prepakujemo bitove po kolonama i posle N bitova stavimo novu kolonu. Time dobijamo da se rafalne greške preraspodele u posebne kolone i onda radimo provere parnosti po redovima. 
+Možemo da preuredimo naše bitove. Ne posmatramo bit po bit, nego imamo bafer gde možemo da prepakujemo bitove po kolonama i posle N bitova stavimo novu kolonu. Time dobijamo da se rafalne greške preraspodele u posebne kolone i onda radimo provere parnosti po redovima. Mala je šansa da se u istoj koloni nađu greške koje su bile jedne pored druge. Što je širi registar, manja je šansa da će rafalna greška biti u istom redu i manja šansa da će se greška desiti.(?? dopuni)
+\subsubsection{Internet kontrolni zbir}
+Računa se u aritmetici nepotpunog komplimenta. Postoje dve reprezentacije nule. Jedna nula može da se iskoristi da predstavi da kontrolni zbir ne postoji, tj. inicijalno zbir koji dodajemo je nula i dodajemo mu prenos sa pozicije najveće težine. Kontrolni zbir ima 16 bitova i predstavlja nepotpuni komplement sume reči po kolonama.\\
+Proces slanja:\\
+\begin{enumerate}
+\item složiti podatke kao šesnaestobitne reči jednu ispod druge
+\item postaviti nule na pozicije kontrolnog zbira
+\item eventualni prenos sa pozicije najviše težine  se prenosi na početak (to je sabiranje u nepotpunom komplementu)
+\item negiramo dobijenu sumu i time dobijemo kontrolni zbir
+\begin{center}
+\includegraphics[width=2cm, height=5cm]{kontZbir}\\
+\end{center}
+\end{enumerate}
+Proces prihvatanja:
+\begin{enumerate}
+\item složiti podatke kao šesnaestobitne reči jednu ispod druge, uključujući i reč za kontrolni zbir
+\item ako postoji prenos sa pozicije najviše težine, dodamo ga na najniži bit
+\item  negiramo rezultat i proverimo da li je nule; ako jeste, onda je sve u redu
+\begin{center}
+\includegraphics[width=2cm, height=5cm]{kontZbir2}\\
+\end{center}
+\end{enumerate}
 \subsection{CRC}
-Koristi se i za ravnomerne i za rafalne greške. Ima mali broj dodatnih bitova, a detektuje i četvorobitne greške.
+Koristi se i za ravnomerne i za rafalne greške. Ima mali broj dodatnih bitova, a detektuje i četvorobitne greške. Još bolja detekcija od prethodnih pristupa. 
 \section{Korekcija grešaka u sloju veze}
 uskoro
 \section{Sloj veze, tipovi servisa, okruženje, utopijski jednosmerni protokol}
@@ -858,6 +879,293 @@ Protokol takodje omogucava paralelan rad vise repliciranih DHCP servera :
 zarad pouzdanosti I efikasnosti i REQUEST se emituje tako da su sinhronizovani\\
 Pitanje koje se namece sa automatskim dodeljivanje IP adrese iz zajednickog skladista koliko dugo IP adresa treba da bude dodeljena. Ako se racunar iskljuci sa  mreze i ne vrati svoju IP adresu DHCP serveru, ona se nepovratno gubi. Posle nekog vremena, mnoge adrese mogu biti izgubljena. Da bi se  sprečilo to, dodeljivanje IP adresa se dodeljuju na određeni vremenski period, tehnika se zove iznajmljivanje(eng.leasing). Neposredno pre isteka zakupa, racunar mora da traži DHCP obnovljanje najma. Ako to ne ucini ili zahtev bude odbijen, racunar ne  moze  više ne koriste tu IP adresu.
 \section{ICMP i NAT}
+IPv4 omogucava samo par milijardi dostupnih javnih adresa, medjutim racunara koji se povezuju na Internet je mnogo vise. Dugorocno resenje bi bilo da citav Internet predje na protokol IPv6 sa 128-bitnim adresama. Taj proces jeste u toku, ali ce proci godine pre nego sto se dovrsi. Zbog toga su mnogi osetili potrebu za nekim brzim resenjem. Ono se pojavilo u obliku sistema za prevodjenje mreznih adresa (NAT). NAT povezuje racunare iz lokalne mreze na spoljnu adresu , npr. Internet.\\
+\begin{enumerate}
+	\item Kucni racunari koriste “private” IP adrese (sluze za interni saobracaj).
+	\item NAT (u okviru kucnog usmerivaca -AP) povezuje vise kucnih racunara na jednu javnu adresu (sluzi za saobracaj na 			Internetu) dodeljenu od strane ISP.
+	Kada paket napusta lokalnu  mrezu I odlazi ka davaocu Internet usluga, njegova adresa se prevodi. Da bi takav sistem
+	mogao da radi, tri opsega IP adresa rezervisana su za private potrebe, s tim da se paketi s tim adresama ne smeju
+	pojaviti na Internetu, a mogu se interno koristiti kako god zele. Tri rezervisana opsega su:
+	\begin{center}
+		\includegraphics[width=9cm, height=5cm]{opseg}\\
+		\includegraphics[width=9cm, height=5cm]{nat}\\
+	\end{center}
+\end{enumerate}
+Kako NAT radi?
+\begin{enumerate}
+	\item On podrzava tabelu (preslikavanje) unutrasnjih/spoljnih adresa
+	\item Zapravo je to preslikavanje IP+TCP port informacija 
+	\begin{center}
+		\includegraphics[width=9cm, height=5cm]{preslikavanje}\\
+	\end{center}
+	\item Portovi su neophodni kaako bi mapiranje bilo 1-1, jer je spoljnih adresa manje (obicno samo jedna)
+	\begin{enumerate}
+		\item Prilikom slanja podataka iz lokalne mreze 
+			\begin{enumerate}
+				\item Svakom IP paketu se menja adresa posiljaoca u skladu sa zadatim preslikavanjem (s leva na desno)
+			\end{enumerate}
+		\item Prilikom prihvataja podataka iz spoljne mreze
+		\begin{enumerate}
+			\item Svakom IP paketu se menja adresa primaova u skladu sa zadatim preslikavanjem (s desna na levo)
+		\end{enumerate}
+	\end{enumerate}
+\end{enumerate}
+Kada stigne odgovor, on je naravno adresiran na 198.168.1.12. Kako onda NAT kutija zna kojom adresom da je zameni? Tvorci sistema NAT zapazili su da IP pakete kao koristan teret  vecinom nose TCP ili UDP okvire ( zaglaavlja njihovih okvira sadrze izvorni I ciljni port). Portovi su 16-bitni celi brojevi koji ukazuju gde pocinje I gde se zavrsava TCP veza. Oni se nalaze u polju koje omogucava da NAT radi. Kada proces pozeli da uspostavi TCP vezu sa udaljenim procesom, on se prikljuci na nezauzetTCP port na sopstvenom racunaru. To je izvorni port koji TCP kodu saopstava gde da salje dolazne pakete koji pripadaju portu. Proces obezbedjuje I ciljni port – mesto na udaljenom racunaru na kome treba predati pakete. Svaka poslata TCP poruka sadrzi I izvorni I ciljni port.\\
+\\
+Pomocu polja Izvorni port mozemo da resimo nas problem preslikavanja adresa. Kad god izlazni paket udje u NAT kutiju, lokalna adresa se zamenjuje javnom IP adresom. Osim toga, TCP polje izvorna adresa zamenjuje se indeksom  u tabeli za prevodjenje sa 65.536 ciljnih adresa u NAT kutiji. Ta ciljna adresa sadrzi originalnu IP adresu I originalni izvorni port. Na kraju, kontrolni zbirovi IP zaglavlja I TCP zaglavlja ponovo se izracunavaju I umecu u paket. \\
+\\
+Kad paket stigne u NAT kutiju od davaoca Internet usluge, vadi se Izvorni port iz TCP zaglavlja I koristi kao indeks u tabeli za prevodjenje NAT kutije. Iz nadjene ciljne adrese citaju se interna IP adresa I I originalni TCP izvorni port I kopirajus eu paket. Zatim se ponovo izracunavaju kontrolni zbirovi TCP I IP zaglavlja I umecu u paket. Paket se potom prosledjuje usmerivacima u kompanijskoj mrezi, radi isporucivanja na odredjenu lokalnu adresu.
+\begin{enumerate}
+	\item Smanjuje potrebe za javnim IP adresama (dovoljna jedna po domacinstvu)
+	\item Lako se instalira
+	\item Cesto u sebi ima I neki vid zastite od upada (firewall)
+	\item Pomaze I po pitanju privatnosti , zasto?
+\end{enumerate}
+Lose strane:
+
+\begin{enumerate}
+	\item Narusena je cistoca slojevitosti (radi na mreznom sloju,a barata TCP portovima)
+	\item Paketi mogu da se primaju samo ako je prethodno bilo poslatih paketa. Zasto?
+	\item o	Tesko je, gotovo nemoguce, koristiti servere preko NAT-a, zasto?
+\end{enumerate}
+\subsection{ICMP – protokol za upravljanje porukama na Internetu}
+Rad Interneta budno nadziru usmerivaci. Kada usmerivac detektuje gresku pri prosledjivanju
+\begin{enumerate}
+	\item Npr. preveliki paket,  maksimalan broj hopova I sl.
+	\item Usmerivac salje ICMP paket posiljaocu
+	\item Pritom odbacuje problematican paket 
+	\begin{center}
+		\includegraphics[width=9cm, height=5cm]{icmp}\\
+	\end{center}
+\end{enumerate}
+ICMP paket sadrzi tip greske, kod I kontrolni zbir\\
+ICMP paket je isti kao IP paket, ima samo indikatorsko polje koje omogucava razlikovanje
+\begin{center}
+	\includegraphics[width=11cm, height=7cm]{poruke}\\
+\end{center}
+
 \section{Rutiranje, mehanizmi alokacije protoka, modeli isporuke, ciljevi rutiranja, principi dizajna algoritama rutiranja, rutiranje sa najkraćim putevima (najmanjim troškom), Dijkstrin algoritam}
+Glavni zadatak mreznog sloja je da pakete usmeri sa izvorisnog na ciljni racunar.\\
+Treba praviti razliku izmadju prosledjivanja I rutiranja.\\
+Prosledjivanje je proces slanja paketa susednim cvorovima\\
+\begin{center}
+	\includegraphics[width=11cm, height=7cm]{rutiranje}\\
+\end{center}
+Alokacija protoka je kljucni aspekt rutiranja.\\
+Rutiranje alocira protok tako da ima na umu otkaze cvorova (postoje I drugi mehanizmi alokacije).\\
+\begin{center}
+	\includegraphics[width=11cm, height=7cm]{alokacija}\\
+\end{center}
+
+\newpage
+Modeli isporuke
+\begin{enumerate}
+	\item Razliciti algoritmi rutiranja za razlicite modele
+	\begin{center}
+		\includegraphics[width=11cm, height=7cm]{modeli}\\
+		\includegraphics[width=11cm, height=7cm]{modeli2}\\
+	\end{center}
+\end{enumerate}
+Principi za dizajn algoritama rutiranja.\\
+Decentralizovani I distribuirani.
+\begin{enumerate}
+	\item Cvorovi su ruteri, ne razmatramo korisnicke racunare
+	\begin{enumerate}
+		\item Kada podatak dodje do poslednjeg rutera, prosledjivanje ka korisnickom racunaaru razmatra sloj veze
+	\end{enumerate}
+	\item Svi cvorovi su ravnopravni, nema bitnijih cvorova
+	\item Cvorovi saznaju ukupno stanje mreze, tako sto razmenjuje poruke sa sussedima
+	\item Cvorovi rade konkurentno
+	\item Mogu se desiti otkazi cvorova I veza ili gubljenje poruka\\
+	- - -Koji put je najbolji? - - -
+	\item Mora se prvo definisati prema cemu najbolji: duzini, ceni, kasnjenju ili kombinaciji istih
+	\begin{center}
+		\includegraphics[width=11cm, height=7cm]{tema}\\
+	\end{center}
+\end{enumerate} 
+Mere troskova\\
+Veliki broj mogucnosti:
+\begin{enumerate}
+	\item Kasnjenje (izbegava zaobilazne puteve)
+	\item Protok (izbegava spore veze)
+	\item Novac (izbegav skupe veze)
+	\item Broj hopova (smanjuje iskoriscenost komunikacione opreme)\\
+		Najkraci putevi\\
+		Pronaci najkraci put za A->E\\
+		Pretpostavimo da je graf :
+		\begin{enumerate}
+			\item Neusmeren (paketi u oba smera)
+			\item Ima simetricne troskove
+		\end{enumerate}
+		*moguce je modelovati algoritme i za neusmerene, asimetricne grafove
+		\begin{center}
+			\includegraphics[width=11cm, height=7cm]{najkraciPut}\\
+			najkraci put (slika 1)
+			\includegraphics[width=11cm, height=7cm]{najkraciPut2}\\
+			najkraci put (slika 2)
+			\includegraphics[width=11cm, height=7cm]{najkraciPut3}\\
+			najkraci put (slika 3)
+		\end{center}
+
+		\textbf{//dodati princip optimalnosti\textit{•}}
+\end{enumerate}
+\break
+Dijkstrin algoritam
+\begin{enumerate}
+	\item Racuna najkrace puteve izmedju zadatog cvora I svih ostalih cvorova
+	\item Rezultat je drvo
+	\begin{center}
+		\includegraphics[width=11cm, height=7cm]{da}\\
+	\end{center}
+\end{enumerate}
+Algoritam:
+\begin{enumerate}
+	\item Postavimo sve cvorove kao privremene 
+	\item Postavimo aktuelne udaljenosti izmedju zadatog cvora I svih cvorova:
+	\begin{enumerate}
+		\item Na vrednost 0 ako je udaljenost do samog sebe
+		\item Na vrednost beskonacno za sve ostale cvorove
+	\end{enumerate}
+	\item Dok ima privremenih cvorova
+	\begin{enumerate}
+		\item Uzmi provremeni cvor X koji ima najmanju udaljnost od zadatog cvora
+		\item Izbaci X iz skupa privremenih cvorova I dodaaj odgovarajucu vezu ka njemu u drvo
+		\item Umanji udaljenost cvorova susednih sa X u skladu sa novododatom  vrednoscu
+
+	\end{enumerate}
+
+
+\end{enumerate}
+\begin{center}
+		\includegraphics[width=9cm, height=5cm]{da1}\\
+		\includegraphics[width=9cm, height=5cm]{da2}\\
+		\includegraphics[width=9cm, height=5cm]{da3}\\
+		\includegraphics[width=9cm, height=5cm]{da4}\\
+		\includegraphics[width=9cm, height=5cm]{da5}\\
+		\includegraphics[width=9cm, height=5cm]{da6}\\
+		\includegraphics[width=9cm, height=5cm]{da7}\\
+		\includegraphics[width=9cm, height=5cm]{da8}\\
+		\includegraphics[width=9cm, height=5cm]{da9}\\
+		
+	\end{center}
+\vskip 2cm
+Karateristike algoritma:
+\begin{enumerate}
+	\item Pronalazi puteve ka cvorovima prema rastucem poretku
+	\begin{enumerate}
+		\item Koristi svojstvo dekompozicije optimalnosti
+		\item 	Posto u svakom koraku biramo cvor X do kojeg je najkraci put, ne moze se desiti da put do X preko nekog
+				kasnije dodatog cvora Y bude kraci!
+	\end{enumerate}
+	\item Vreme izvrsavanja zavisi od efikasnosti pronalazenja najboljeg privremenog cvora (onog do koga postoji najkraci 					put)
+		\begin{enumerate}
+			\item Moze se koristit hip strukutra
+			\item Slozenost je veca od linearne
+		\end{enumerate}
+\end{enumerate}
+
+
 \section{Rutiranje zasnovano na vektoru razdaljine}
+DV rutiranje (Distance vector routing)\\
+\\
+Algoritam za dinamičko usmeravanje (uzima u obzir aktuelni saobraćaj na mreži, za razliku od statički algoritama). Radi tako što čvor održava tabelu (tj. vektor) s najkraćim poznatim rastojanjima do svakog odredišta i linijama preko kojih se do odredišta može stići. Čvor ažurira te tabele razmenjujući informacije sa susedima. Za čvor se pretpostavlja da zna rastojanje do svakog od svojih suseda, čvor utvrđuje koja je procena najbolja, koristi je i upisuje u svoju novu tabelu za usmeravanje.\\
+\\
+Ovaj pristup se zasniva na razmeni vektora (tabela) razdaljine između susednih čvorova.\\
+\\
+Jedan od prvih pristupa (Arpanet), u praksi se danas retko koristi.
+\begin{center}
+		\includegraphics[width=9cm, height=5cm]{dv}\\
+\end{center}
+Svaki čvor održava vektor udaljenosti i sledećih hopova(skokova) za sve ciljne čvorove:
+\begin{enumerate}
+	\item Inicijalizuje udaljenost do samog sebe na 0, i udaljenost ka svim ostalim čvorovima na BESKONACNO
+	\item Periodično šalje svoj vektor ka susedima
+	\item Preračunava svoj vektor udaljenosti na osnovu vektora dobijenih od svojih suseda
+\end{enumerate}
+\begin{center}
+		\includegraphics[width=9cm, height=5cm]{dv1}\\
+		\vskip 5mm
+		\includegraphics[width=9cm, height=5cm]{dv2}\\
+		\vskip 5mm
+		\includegraphics[width=9cm, height=5cm]{dv3}\\
+		\vskip 5mm
+		\includegraphics[width=9cm, height=5cm]{dv4}\\
+		\vskip 5mm
+		\includegraphics[width=9cm, height=5cm]{dv5}\\
+		\vskip 5mm
+		\includegraphics[width=9cm, height=5cm]{dv6}\\
+		\vskip 5mm
+\end{center}
+\newpage
+Robusnost:
+\begin{enumerate}
+	\item Dodavanje veza ili čvorova:
+		\begin{enumerate}
+			\item Vest putuje jedan hop po razmeni
+			\item Ovo nije preterano brzo
+		\end{enumerate}
+	\item Uklanjanje veza ili čvorova:
+		\begin{enumerate}
+			\item Susedi ne objavljuju više razmena sa njim pa  posle nekog vremena zaborave da postoji
+			\item Može se uvesti maksimalna starost razmenjenog vektora
+		\end{enumerate}
+	\item Razbijanje mreže na dva dela su ozbiljan problem!
+		\begin{enumerate}
+			\item Problem brojanja do beskonačnosti
+			\item Postoje načini da se ovo reši, ali ćemo preskočiti taj deo…
+		\end{enumerate}
+
+\end{enumerate}
+\subsection{Problem brojanja do beskonačnosti}
+Iako DV algoritam uvek na kraju daje optimalno rešenje. To dugo traje. On brzo reaguje na povoljne informacije, ali kad dobije nepovoljne, okleva da ih upiše. Dobra vest putuje bryo, a loša sporo…\\
+\\
+Da bismo se uverili kako se brzo šire dobre vesti, razmotrimo linearnu podmrežu s pet čvorova, gde se rastojanje meri brojem skokova.\\
+\begin{center}
+		\includegraphics[width=9cm, height=5cm]{dobra}\\
+\end{center}
+
+ Pretpostavimo da  je na početku čvor A isključen I ostali čvorovi znaju to. Svi su oni u svoje tabele zabeležili beskonačno kašnjenje  do usmerivača A. Kada se A uključi, ostali čvorovi će to saznati nakon razmene vektora. U prvoj razmeni, B saznaje da kašnjenje od njegovog levog suseda do A iznosi 0 (skokova). B zapisuje u tabelu da se A nalazi na jedan skok ulevo od njega. Svi ostali čvorovi još uvek misle da je A u kvaru.  U sledećoj razmeni, C saznaje da je B udaljen za jedan skok od A, pa ažurira svoju tabelu vrednošću 2…. Odavde se jasno vidi da se dobre vesti šire brzinom od jednog skoka po jednoj razmeni informacija. U podmreži čija najduža putanja obuhvata N skokova, svi će posle N razmena saznati da se neki čvor ili linija vratili u zivot.\\
+\\
+Razmotrimo sada situaciju na kojoj u početku sve linije I svi čvorovi rade. Najednom, čvor A puca ili se prekida linija između A i B. 
+\begin{center}
+		\includegraphics[width=9cm, height=5cm]{losa}\\
+		\vskip 20mm 
+		\includegraphics[width=9cm, height=5cm]{losa2}\\
+\end{center}
+
+\newpage
+\section{Plavljenje}
+Algoritam statičkog usmeravanja.\\
+\\
+Emitovanje poruke svim čvorovima pomoću tehnike plavljenja (jednostavan mehanizam, ne preterano efikasan).
+\begin{center}
+		\includegraphics[width=9cm, height=5cm]{plavljenje}\\
+\end{center}
+Plavljenje:
+\begin{enumerate}
+	\item Pravilo na svakom čvoru:
+		\begin{enumerate}
+			\item Nakon pristizanja poruke, prosledi je svim ostalim susedima
+			\item Zapamti nekako poruku kako bi je ponovo prosleđivao ako ti opet stigne
+		\end{enumerate}
+	\item Neefikasno jer jedan čvor može da dobije višestruke kopije iste poruke
+\end{enumerate}
+\break
+\begin{center}
+		\includegraphics[width=9cm, height=5cm]{plavljenje1}\\
+		\vskip 10mm
+		\includegraphics[width=9cm, height=5cm]{plavljenje2}\\
+		\vskip 10mm
+		\includegraphics[width=9cm, height=5cm]{plavljenje3}\\
+		\vskip 10mm
+		\includegraphics[width=9cm, height=5cm]{plavljenje4}\\
+		\vskip 10mm
+		
+\end{center}
+Poplava paketa se može ograničiti Itako što se povede računa o poslatim paketima. Tu izvorišni čvor pridružuje redni broj svakom paketu koji primi od računara za koje je vezan. Svaki dalji čvor tada treba da vodi listu za svaki izvorišni čvor I I da u nju beleži pakete koji su već stigli s tog izvora. Kada ponovo stigne paket koji je na listi , on se dalje ne emituje mahanizmom plavljenja.\\
+\\
+Da liste ne bi neogranično rasle, svakoj se pridružuje brojač k, čija vrednost znači da su kroz čvor prošli svi paketi do  rednog broja k. Kada stigne paket rednog broja manjeg od k, on se odbacuje kao duplikat. Lista paketa s redinm brojem manjim od k nije potrebna zato što ih k sve sumira.\\
+\\
+Moguće je omogućiti i ARQ (Automatic repeat request – protokol za kontrolu greške, ukoliko u paketu postoji greška, primalac traži od izvornog čvora da mu ponovo pošalje paket ), kako bi plavljenje bilo pouzdanije. 
+
 \end{document} % The document ends here
