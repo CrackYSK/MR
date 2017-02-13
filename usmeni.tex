@@ -663,6 +663,7 @@ Nastao po ugledu na ra\v{c}unarsku mre\v{z}u koja je povezivala Havajska ostrva 
 	\item \v{C}ista ALOHA
 	\item Vremenski raspodeljena ALOHA
 \end{itemize}
+Kod ALOHA protokola se ne oslu\v{s}kuje saobra\'{c}aj pre slanja.
 
 \subsubsection{\v{C}ista ALOHA}
 
@@ -679,7 +680,49 @@ Osnovne karakteristike su mu jednostavnost i decentralizovanost. Ovaj algoritam 
 Kod vremenski raspodeljene neophodno je sinhronizovanje globalnog vremena. To se obi\v{c}no posti\v{z}e tako \v{s}to jedna stanica u predodre\dj{}enom intervalu \v{s}alje poseban signal. Time se vreme deli na intervale kona\v{c}ne du\v{z}ine. Emitovanje je dozvoljeno samo na po\v{c}etku intervala. Time se smanjuje verovatno\'{c}a da do\dj{}e do sukoba. Uspe\v{s}nost ovog algoritma je eksperimentalno utvr\dj{}ena i iznosi 36\%.
 
 \section{CSMA, CSMA/CD, BEB}
+
+Kako bi pobolj\v{s}ali karakteristike koje dobijamo sa ALOHA protokolima, koristimo \textbf{protokole za pristupanje uz oslu\v{s}kivanje saobra\'{c}aja na nosiocu podataka} (\textit{carrier sense protocols}). Oslu\v{s}kivanje saobra\'{c}aja ne garantuje da ne\'{c}e biti kolizija zbog ka\v{s}njenja signala.
+
+\subsection{CSMA}
+
+Kada stranica ima podatke za slanje, ona prvo oslu\v{s}ne kanal da bi utvrdila da li je zauzet. Ako na kanalu ima saobra\'{c}aja, stanica \v{c}eka, pa tek kada se kanal oslobodi \v{s}alje svoj okvir. Kada do\dj{}e do sukobljavanja, stranica \v{c}eka tokom nasumi\v{c}no odabranog perioda i po\v{c}inje ponovo. Postoji nekoliko varijacija CSMA protokola:
+\begin{itemize}
+	\item 1-trajni CSMA - nakon \v{s}to se kanal oslobodi, stanica \v{s}alje okvir sa verovatno\'{c}om jedan \v{c}im utvrdi da je kanal prazan
+	\item Povremeni CSMA - kada utvrdi da je kanal zauzet, ne proverava svaki \v{c}as da li se oslobodio, ve\'{c} proverava nakon nasumi\v{c}no odabranog intervala
+	\item p-trajni CSMA - ukoliko je kanal prazan, emituje se sa verovatno\'{c}om $p$, dok se sa verovatno\'{c}om $q=1-p$ odustaje od emitovanja do slede\'{c}eg vremenskog intervala
+\end{itemize}
+
+\begin{center}
+\includegraphics[scale=0.5]{csma}
+\end{center}
+
+\subsection{CSMA/CD}
+
+Dodatno pobolj\v{s}anje predstavlja prekid emitovanja ukoliko stanica utvrdi da je do\v{s}lo do kolizije. Time bi se prekinulo ionako bespotrebno slanje izobli\v{c}enih podataka i u\v{s}tedelo vreme i propusni opseg. Ovakav protokol se naziva CSMA uz otkrivanje sukoba (\textit{CSMA with Collision Detection}). Minimalno vreme potrebno za otkrivanje sukoba jednako je vremenu putovanja od jedne stanice do druge, me\dj{}utim, mo\v{z}e se desiti, u najgorem slu\v{c}aju da to vreme bude dvostruko ve\'{c}e. U slu\v{c}aju da najudaljenija stanica po\v{c}ne sa emitovanjem ta\v{c}no u trenutku kad signal prve stigne do nje. U tom slu\v{c}aju \'{c}e informacija o sukobu sti\'{c}i do prve stanice mnogo kasnije. Zbog ovoga se \v{c}esto koristi ograni\v{c}enje za minimalnu du\v{z}inu poruke, kako bi se onemogu\'{c}ilo da stanica po\v{s}alje celu poruku pre nego \v{s}to uo\v{c}i koliziju.  Stanica koja \v{s}alje ne mo\v{z}e primati podatke jer se za oslu\v{s}kivanje kolizije koristi logika primaoca.
+
+\subsection{BEB}
+
+BEB (Binarno Eksponencijalno Odlaganje) protokoli su zapravo modifikacija p-trajnih CSMA protokola (\v{c}esto u kombinaciji sa detekcijom sukobljavanja). Naime, u slu\v{c}aju kolizije \v{c}eka se interval potreban da se po\v{s}alje 0 ili 1 okvir. Tada se ponovo poku\v{s}ava. Ukoliko se ponovo dogodi neuspeh, \v{c}eka se period vremena potreban da se po\v{s}alje izme\dj{}u 0 i 3 okvira. Pri svakom slede\'{c}em neuspehu interval se duplira. Ovako interval brzo raste, i dobija se velika efikasnost u prakti\v{c}noj primeni. Protokol CSMA/CD sa BEB je bio veoma kori\v{s}\'{c}en '80-ih i '90-ih za LAN mre\v{z}e.
+
 \section{MAC protokoli zasnovani na redosledu, Token Ring}
+
+Kako i CSMA daje relativno lo\v{s} rezultate pod visokim optere\'{c}enjem (visoki dodatni tro\v{s}kovi, vreme pristupa varira), potreban nam je protokol koji \'{c}e obezbediti prihvatljive performanse u uslovima visokog optere\'{c}enja.
+MAC protokoli zasnovani na redosledu predstavljaju ure\dj{}ene protokole u kojima svaka stanica kada do\dj{}e na red mo\v{z}e da po\v{s}alje okvir ili da propust redosled, ukoliko nema potrebu da \v{s}alje. Ure\dj{}enje se mo\v{z}e definisati po tokenu koji se prosle\dj{}uje ili po vrednosti adrese.
+
+\subsection{Token Ring}
+
+\v{C}vorovi se organizuju u prsten. Token se prosle\dj{}uje u krug. Pravo slanja okvira ima samo \v{c}vor koji poseduje prsten.
+
+\begin{center}
+\includegraphics[scale=0.3]{token-ring}
+\end{center}
+
+Zajedno sa tokenom, i podaci idu samo u jednom smeru. Ta\v{c}nije, ukoliko stanica primi paket koji nije namenjen njoj, ona ga prosle\dj{}uje dalje u odgovaraju\'{c}em smeru. Ovde treba obezbediti da se paket ne vrti beskona\v{c}no kroz prsten. Uklanjanje paketa iz mre\v{z}e mo\v{z}e obaviti stanica kojoj je paket namenjen ili stanica koja je paket poslala (ukoliko paket obi\dj{}e ceo krug bez da na\dj{}e primaoca).
+
+\subsection{Prednosti i mane}
+
+Kako su svi tro\v{s}kovi unapred predefinisani i onemogu\'{c}ena kolizija, dobijamo efikasniji rad pri visokim optere\'{c}enjima. Tako\dj{}e, garantovano je da \'{c}e u razumnom roku svi (unapred definisanom) svaki \v{c}vor dobiti priliku da po\v{s}alje svoj okvir. Me\dj{}utim, i u ovom protokolu postoje nedostaci. Pre svega, tu je veliki tro\v{s}ak pri malim optere\'{c}enjima. Tako\dj{}e, mo\v{z}e se desiti da se u komunikaciji izgubi token. Ovi protokoli se primenjuju eksperimentalno, kao mogu\'{c}nost pobolj\v{s}anja. Me\dj{}utim, protokoli sa slu\v{c}ajno\v{s}\'{c}u se uglavnom mnogo bolje pokazuju i te\v{s}ko nadma\v{s}uju.
+
 \section{MAC protokoli za bežične mreže}
 \section{Klasični Eternet}
 \section{Moderni (komutirani) Eternet}
