@@ -541,9 +541,10 @@ Ako imamo podatak 0101, dodajemo 0 na kraj kao kontrolni bit za proveru parnosti
  
 \subsection{Kontrolni zbirovi}
 Koriste se za rafalne greške. Problem kod rafalnih grešaka je što se one dešavaju uzastopno.\\
-Možemo da preuredimo naše bitove. Ne posmatramo bit po bit, nego imamo bafer gde možemo da prepakujemo bitove po kolonama i posle N bitova stavimo novu kolonu. Time dobijamo da se rafalne greške preraspodele u posebne kolone i onda radimo provere parnosti po redovima. Mala je šansa da se u istoj koloni nađu greške koje su bile jedne pored druge. Što je širi registar, manja je šansa da će rafalna greška biti u istom redu i manja šansa da će se greška desiti.(?? dopuni)
+Opšti pristup:\\
+Možemo da preuredimo naše bitove. Ne posmatramo bit po bit, nego imamo bafer gde možemo da prepakujemo bitove po kolonama i posle N bitova stavimo novu kolonu. Time dobijamo da se rafalne greške preraspodele u posebne kolone i onda radimo provere parnosti po redovima. Susedni bitovi se premeštaju u različite redove, pa je mala šansa da se u istom redu nađu greške koje su bile jedne pored druge. Što je širi registar, manja je šansa da će rafalna greška biti u istom redu i manja šansa da će se greška desiti.(?? dopuni, proveri ispravnost gde se koristi red, gde kolona, nešto je mešao to na predavanjima)
 \subsubsection{Internet kontrolni zbir}
-Računa se u aritmetici nepotpunog komplimenta. Postoje dve reprezentacije nule. Jedna nula može da se iskoristi da predstavi da kontrolni zbir ne postoji, tj. inicijalno zbir koji dodajemo je nula i dodajemo mu prenos sa pozicije najveće težine. Kontrolni zbir ima 16 bitova i predstavlja nepotpuni komplement sume reči po kolonama.\\
+Konkretna implementacija prethodnog opšteg pristupa. Računa se u aritmetici nepotpunog komplimenta. Postoje dve reprezentacije nule. Jedna nula može da se iskoristi da predstavi da kontrolni zbir ne postoji, tj. inicijalno zbir koji dodajemo je nula i dodajemo mu prenos sa pozicije najveće težine. Kontrolni zbir ima 16 bitova i predstavlja nepotpuni komplement sume reči po kolonama.\\
 Proces slanja:\\
 \begin{enumerate}
 \item složiti podatke kao šesnaestobitne reči jednu ispod druge
@@ -563,8 +564,28 @@ Proces prihvatanja:
 \includegraphics[width=2cm, height=5cm]{kontZbir2}\\
 \end{center}
 \end{enumerate}
+Kontrolni zbir se koristi i na višim slojevima, ne samo na sloju veze.
 \subsection{CRC}
-Koristi se i za ravnomerne i za rafalne greške. Ima mali broj dodatnih bitova, a detektuje i četvorobitne greške. Još bolja detekcija od prethodnih pristupa. 
+Koristi se i za ravnomerne i za rafalne greške. Ima mali broj dodatnih bitova, a detektuje i četvorobitne greške. Još bolja detekcija od prethodnih pristupa. \\
+Sekvenca bitova se smatra polinomom čiji su koeficijenti samo nule i jedinice. Tamo gde je jedan, to znači da u polinomu postoji taj stepen, ako je nula, znaci da ne postoji.\\
+Cilj je da se napravi neki drugi polinom na osnovu polinoma koji želimo da pošaljemo i taj konačni polinom koji treba da se pošalje (sastoji se od početnog polinoma i tog napravljenog polinoma) treba da bude deljiv sa nekim drugim unapred određenim polinomom koji se naziva \textit{generator} i kojeg znaju i primalac i pošiljalac. Za datih n bitova podataka, generišemo k kontrolnih bitova (određuje se preko toga koliki je najveći mogući ostatak koji može da se dobije deljenjem sa generatorom) tako da n+k bitova bude deljivo sa generatorom C.\\
+Postupak slanja: 
+\begin{enumerate}
+\item proširiti n bitova sa k nula
+\item podeliti broj sa odabranim brojem C
+\item zadržimo samo ostatak 
+\item dodamo ostatak na prosiren broj
+\end{enumerate}
+Primanje podataka:
+\begin{enumerate}
+\item podeliti poruku sa brojem C i proveriti da li je ostatak pri deljenju jednak nuli
+\end{enumerate}
+Primer: želimo da pošaljemo niz bitova 1101011111 (polinom $ x^{9}+x^{8}+x^{6}+x^{4}+x^{3}+x^{2}+x^{1}+1 $, dalje radimo sa binarnim vrednostima i aritmetikom po modulu 2, ignorišemo potencijalne prenose sa najviše pozicije). Imamo delilac $C(x)= x^{4} + x^{1} + 1 $, što znači da je C=10011 i k=4.
+\begin{center}
+\includegraphics[width=12cm, height=7cm]{crc}\\
+\end{center}
+CRC detekcija se radi i na višim slojevima, ne samo na sloju veze.
+
 \section{Korekcija grešaka u sloju veze}
 uskoro
 \section{Sloj veze, tipovi servisa, okruženje, utopijski jednosmerni protokol}
