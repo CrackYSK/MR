@@ -4,6 +4,8 @@
 \usepackage[T1]{fontenc}
 \usepackage{currvita}
 \usepackage{graphicx}
+\usepackage{float} % podrska za float smestanje figura <=> opcija [H]
+\usepackage{latexsym} % podrska za specijalne simbole
 \graphicspath{ {images/} }
 \title{Mrežno računarstvo - skripta}
 
@@ -401,7 +403,61 @@ Postoje još neki otežavajući efekti. Propagacija bežičnog signala je slože
 \end{center}
 
 \section{Modulacija i multipleksiranje signala}
-Sa slajdova i u knjizi poglavlje.
+\subsection{Modulacija}
+
+(Ka\v zite mu $"$erudijum 36 eksplozivni svemirski modulator$"$ i dobi\' cete ve\' cu ocenu jer je to iz Du\v ska Dugou\v ska i on je to pominjao na \v casu)
+
+Modulacija je proces prebacivanja anolognog signala u digitalni i obrnuto. Radi prenosa podataka kroz fizi\v cki medijum moramo da na\dj  emo na\v cin da bitove prebacimo u analogni signal.
+\\
+\\
+Najjednostavniji oblik digitalne modulacije je kori\v s\' cenje pozitivnog napona da predstavlja 1 i negativnog napona da predstavlja 0. Za opti\v cko vlakno, prisustvo svetlosti mo\v ze predstavljati 1 i odsustvo svetlosti mo\v ze predstavljati 0. Ova \v sema se naziva NRZ (Non-Return-to-Zero).
+\\
+Kada ga po\v saljemo, NRZ signal se rasprostire niz \v zicu. Na drugom kraju, prijemnik je pretvara u komadi\' ce od uzorkovanjem signala u redovnim vremenskim intervalima.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/nrz.png}
+\end{figure}
+
+Ako imamo dugi niz nula ili jedinica, mo\v ze da se desi da primalac ne zna koliko ih je ta\v cno. Da bi se ovo izbeglo mo\v ze da se koristi sinhronizacija satova. Po\v salje se jo\v s jedan sat na drugi kraj. Me\dj  utim mo\v ze da se pome\v sa signal sata sa podacima tako \v sto se XOR-uju zajedno. Ovo se zove Man\v cester kodiranje. Ali ovaj metod koristi duplo ve\' ci protok.
+\\
+Druga strategija bi bila da koristimo 1 za prelazak signala a 0 ako nema prelaska signala. Ova \v sema se zove NRZI (Non-Return-to-Zero-Inverted).
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/nrzi.png}
+\end{figure}
+
+Sada dugi nizovi jedinica nisu problem ali dugi nizovni nula i dalje jesu. Kako bi ovo izbegli mo\v zemo da koristimo 4B-5B kodiranje.
+Svaka 4 bita se mapiraju u 5-bitni uzorak sa fiksnom tabelom za prevo\dj  enje. Peto bitni obrasci su tako izabrani da nikada ne\' ce biti niz od vi\v se od tri uzastopne 0.
+\\ npr. 0000 -> 11110, 0001 -> 01001, 1110 -> 11100, \dots 1111 -> 11101
+\\ \\
+Prethodni tipovi modulacije su bili direktni (baseband). Signal se na \v zicu \v salje direktno. Frekvencije digitalnog i analognog signala su iste. Ovo nije mogu\' ce kod optike i be\v zi\v cnih signala. Zbog toga \v sto rade na mnogo visokim frekvencijama. Modulacija preko nosa\v ca koristi druga\v ciju (indirektnu) reprezentaciju signala.
+\\
+Signal nosa\v c oscilira na \v zeljenoj frekvenciji a potom se modulira promenom: amplitude, frekvencije ili faze.
+\\
+\\
+U ASK (Amplitude Shift Keying), dve razli\v cite amplitude se koriste za predstavljanje 0 i 1. Vi\v se od dva nivoa mo\v ze da se koristi za predstavljanje vi\v se simbola.
+\\
+Sli\v cno tome, sa FSK (Frequency Shift Keying), dva ili vi\v se razli\v citih tonova se koriste. Primer na slici koristi samo dve frekvencije. U najjednostavniji oblik PSK (Phase Shift Keying), nosa\v c talas se sistematski pomera 0 ili 180 stepeni u svakom periodu simbola.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/passband.png}
+\end{figure}
+
+\subsection{Multipleksiranje signala}
+
+Multipleksiranje se bavi deljenjem kanala izme\dj  u vi\v se  korisnika.
+Postoje tri standardna pristupa: Frekvenciono multipleksiranje, Vremensko multipleksiranje i Multipleksiranje zasnovano na kodovima (CDMA).
+\\ 
+\\ Frekvenciono moduliranje deli kanal tako \v sto razli\v cite korisnike postavlja na  razli\v cite frekvencione opsege: u sobi punoj ljudi, ovo bi zna\v cilo da se fokusirate na slu\v sanje onih koji pri\v caju jako brzo, jako sporo, srednje, \dots
+\\
+\\ Vremensko multipleksiranje deli kanal vremenski (kao timesharing  koncept u OS): Korisnici se dr\v ze fiksnog rasporeda, upotrebljava se u sistemima fiksne i mobilne telefonije, u sobi punoj ljudi bi ovo zna\v cilo da svi \' cute dok pri\v ca neka podgrupa, pa onda pri\v ca slede\' ca grupa, itd.
+\\
+\\ CDMA (code division multiple access), korisnicima se dodeljuju 
+klju\v cevi. Klju\v cevi su me\dj u sobom ortogonalni. Na originalni signal se primenjuje klju\v c (skalarni proizvod). U sobi bi ovo zna\v cilo da neki ljudi pri\v caju razli\v citim jezicima.
 
 
 \section{Prirodna ograničenja prenosa signala}
@@ -430,6 +486,108 @@ Na primer, kanal propusnog opsega 3000Hz, sa odnosom signala i termičkog šuma 
 Bežični kanali: Za dato B, SNR drastično varira, čak i do 60dB. Nije isplativo projektovati za najgori slučaj, mora se živeri sa visokim varijacijama prenosa.
 
 \section{Pregled relevantnijih sistema komunikacija}
+Kada dva bliska ra\v cunara u istoj kompaniji ili organizaciji treba da me\dj usobno komuniciraju, \v cesto je najlak\v se povezati ih kablom. Lokalne mre\v ze rade na taj na\v cin. Me\dj utim, kada su ra\v cunati na ve\' coj razdaljini ili ih ima vi\v se, ili onda kada u cilju njihovog povezivanja treba koristiti javni put ili pre\' ci podru\v cje u tu\dj em vlasni\v stvu, cena postavljanja privatnih kablova mo\v ze da bude ograni\v cavaju\' ci \v cinilac. U ve\' cini dr\v zava je nelegalno razvla\v citi privatne prenosne linije preko (ili ispod) javnog podru\v cja.  Zbog toga projektanti mre\v za motaju da se oslanjaju na postoje\' cu telekomunikacionu strukturu. 
+\\
+\\Ta struktura, naro\v cito javna komutirana telefonska mre\v za, obi\v cno je projektovana davno, sa potpuno drugim ciljem: da manje-vi\v se razumljivo prenosi ljudski glas. Kabl koji povezuje ra\v cunare mo\v ze da prenosi podatke brzinom $10^9b/s$, mo\v zda i br\v ze. Nasuprot tome, modemska telefonska linija radi maksimalnom brzinom $56 kb/s$, tj. skoro 20000 puta sporije. Ako se modemska telefonska linija zameni ADSL linijom, ona \' ce ipak biti 1000-2000 puta sporija od kablovske veze.
+
+
+
+\subsection{Struktura fiksne telefonije}
+
+Telefonski sistem bio je organizovan kao visokoredudantna hijerarhija s vi\v se nivoa. Svaki telefon bio je snabdeven s dve bakarne \v zice koje su vodile direktno do lokalne telefonske centrale, zvane kra\' ce lokalna centrala. Dvo\v zi\v cna veza izme\dj u korisnika i centrale poznata je i kao lokalna linija. Kada pretplatnik koji je povezan sa odre\dj enom centralom pozove drugog pretplatnika povezanog sa istom centralom, mehanizam za uklju\v civanje u centrali uspostavlja direktnu elektri\v cnu vezu izme\dj u dve lokalne linije. Ta veza se ne prekida dok traje razgovor. 
+\\
+\\ Kada je tra\v zeni pretplatnik vezan za drugu lokalnu centralu, mora se postupiti druga\v cije. Od svake lokalne centrale vodi vi\v se linija ka obli\v znjim centralama vi\v seg nivoa, tzv. regionalnim telefonskim centralama. Te linije se zovu regionalni vodovi. Ako od lokalnih centrala pozivaoca i pozvanog korisnika vode magistrale ka istoj regionalnoj centrali, veza se mo\v ze uspostaviti u regionalnoj centrali. Telefonska mre\v za koja se sastoji samo od telefona (male ta\v cke), lokalnih centrala (ve\' ce ta\v cke) i regionalnih centrala (kvatrati\' ci) prikazana je na slici \ref{fiksna telefonija}. Ako pozivalac i potencijalni sagovornik nemaju istu regionalnu centralu, veza se mora uspostaviti na nekom vi\v sem nivou. Regionalne centrale svih nivoa me\dj usobno komuniciraju pomo\' cu odgovaraju\' cih kablova.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/fiksna.png}
+	\caption{Tipi\v cno uspostavljanje veze srednje du\v zine}
+	\label{fiksna telefonija}
+\end{figure}
+
+Za telekomunikacije se koriste veoma razli\v citi prenosni medijumi. Lokalne linije su danas parice 3. kategorije, iako su na po\v cecima telefonije preko bandera bile rastezane gole \v zice, me\dj usobno udaljene 25 cm. Za vezu izme\dj u centrala \v siroko se koriste koaksijalni kablovi, mikrotalasi i, naro\v cito, opti\v cki kablovi. Ranije su podaci kroz telefonski sistem preno\v seni analogno, pri \v cemu je glas \v sto vernije preslikavan u pusliraju\' ci elektri\v cni napon koji je preno\v sen sa izvora do odredi\v sta. S napretkom tehnologije opti\v ckih vlakana, digitalne elektronike i ra\v cunara, sve linije i centrale su sada digitalne, osim lokalne koja je ostala jedini analogni deo u sistemu.  Prenos podataka u digitalnom obliku je pogodniji jer se tu ne mora ta\v cno reprodukovati oblik analognog talasa pri prolasku kroz razne poja\v civa\v ce na dugom putu. Dovoljno je da se ta\v cno prenesu jedinice i nule. Zbog toga je digitalni prenos pouzdaniji od analognog. Tako\dj e je jeftiniji i lak\v se se odr\v zava. 
+\\
+\\ Dakle, sistem se sastoji od tri glavne komponente:
+\begin{enumerate}
+	\item Lokalne linije (analogna uporedna parica koja dolazi do stanova korisnika i poslovnih zgrada).
+	\item Telefonski kablovi (digitalni opti\v cki kablovi koji povezuju centrale)
+	\item Centrale (u kojima se poziv prebacuje sa jednog kabla na drugi).
+\end{enumerate}
+
+Kada ra\v cunar po\v zeli da po\v salje digitalne podatke preko analogne telefonske linije, podaci se prvo moraju pretvoriti u analogan oblik za prenos lokalnom linijom. To pretvaranje obavlja modem. U lokalnoj telefonskoj centrali podaci se opet pretvaraju u digitalan oblik za slanje preko glavnih vodova. Ako se na drugom kraju nalazi ra\v cunar opremljen modemom, potrebno je ponovo izvr\v siti digitalno-analogno pretvaranje da bi se pro\v sla lokalna linija na odredi\v stu.
+\\
+\\ Analogni signal predstavlja nepravilan naponski talas. Uz savr\v sen prenosni medijum, druga strana \v ce primiti signal u obliku u kojem je poslat. Na\v zalost, medijumi nisu savr\v seni, tako da poslati signali nisu isti. Kod digitalnih signala takva razlika se ne mo\v ze tolerisati. Prenosne linije pate od tri glavne boljke: slabljenja, ka\v snjenja i \v suma. \textit{Slabljenje} ozna\v cava smanjenje energije signala na putu zbog gubitka. Gubici se izra\v zavaju brojem decibela po kilometru i zavise od frekvencije. Signal treba zami\v sljati kao skup Furijeovih komponenti. Svaka komponenta slabi u druga\v cijoj meri, tako da na odredi\v ste sti\v ze izobli\v cen spektar Furijeovih komponenata. Jo\v s gore je \v sto se pojedine Furijeove komponente kre\' cu razli\v citom brzinom kroz provodnik i zbog toga na drugi kraj provodnika signal sti\v ze izobli\v cen.
+\\
+\\ \textit{\v Sum} je energija koja ne poti\v ce od izvora. Termi\v cki \v sum je prouzrokovan haoti\v cnim kretanjem elektrona u provodniku i on se ne mo\v ze izbe\' ci. Preslu\v savanje je izazvano induktivnom spregom izme\dj u dva bliska provodnika (dok razgovarate telefonom u pozadini mo\v zete da \v cujete drugi razgovor). Postoji i impulsni \v sum, izazvan naponskim udarima i drugim uzrocima. Takav impuls mo\v ze da obri\v se jedan ili vi\v se bitova digitalnih podataka.
+
+ 
+\subsection{Sistem mobilne telefonije}
+
+\begin{description}
+	\item[1G] ~
+	\begin{itemize}
+		\item analogni glas
+		\item FM modulacija (kao kod radija)
+		\item odvojene frekvencije za slanje i primanje govora
+	\end{itemize}
+	
+	\item[2G] ~ 
+	\begin{itemize}
+		\item digitalni glas
+		\item GSM (Global System for Mobile communications)
+		\item QPSK modulacija
+	\end{itemize}
+
+	\item[3G] ~
+	\begin{itemize}
+		\item digitalni glas i podaci
+		\item UMTS (Universal Mobile Telecommunications System)
+		\item koristi CDMA
+	\end{itemize}
+
+	\item[4G] ~
+	\begin{itemize}
+		\item digitalni glas i podaci
+		\item LTE (Long Term Evolution)
+		\item OFDM modulacija–napredna varijanta FDM
+	\end{itemize}
+\end{description}
+
+\noindent\textbf{Organizacija baznih stanica}
+\\ Geografske jedinice koje se nazivaju \' celije odnosno bazne stanice. Svaki mobilni korisnik koristi \' celijsku frekvenciju. Pri napu\v stanju jedne \' celije, prelazi u drugu (koncept pod nazivom handoff). Iste frekvencije se koriste na nesusednim \' celijama. Za podr\v zavanje ve\' ceg broja korisnika, obi\v cno se ograni\v cava geografski prostor \' celije.
+
+\subsection{Kablovska televizija}
+
+Kablovska televizija je razvijana krajem \v cetrdesetih godina kao na\v cin da se pobolj\v sa prijem TV signala za korisnike u seoskim i brdovitim podru\v cjima. Sistem se prvobitno sastojao od velike antene za prijem signala postavljene na vrh brda, poja\v civa\v ca zvanog centralni razvodnik, da ga poja\v ca, i koaksijalnog kabla da ga sprovede do domova korisnika. Tako je nastala televizija sa zajedni\v ckom antenom. Vremenom su kablovske kompanije postavljale sve vi\v se kablova kako bi podr\v zali vi\v se korisnika, a zatim i kablove izme\dj u gradova da bi sve mre\v ze povezale u jedinstven sistem. Sistem je rastao tokom godina i kablovi izme\dj u gradova su zamenjivani opti\v ckim vlaknima visokog propusnog opsega, ba\v s kao \v sto se desavalo i u oblasti telefonije. Sistem s me\dj ugradskim vezama izvedenim pomo\' cu opti\v ckih kablova i koaksijalim kablovima za lokalno razvo\dj enje, nazvan je hibridni opti\v cko-koaksijalni sistem. Na spojevima koaksijalnog i opti\v ckog kanala bili su elektroopti\v cki pretvara\v ci, zvani opti\v cki \v cvorovi. Jedan opti\v cki \v cvor mogao je da opslu\v zi brojne koaksijalne kablove.
+\\
+\\ Mnogi operateri kablovski mre\v za poslednjih godina su shvatili da korisnicima mogu da ponude i pristup Internetu, a tako\dj e i telefonske usluge. Tehni\v cke razlike izme\dj u sistema kablovske televizije i sistema telefonije odredile su \v sta za to mora da se uradi. Svi jednosmerni poja\v civa\v ci morali su da se zamene dvosmernim poja\v civa\v cima. U lokalnom korisni\v ckom okru\v zenju isti kabl deli mnogo doma\' cinstava, dok u telefonskom sistemu svaka ku\' ca ima svoju privatnu liniju. Kada se koristi TV za prenos, ta razlika ne igra nikakvu ulogu. Nije va\v zno da li program gleda 10 ili 10000 korisnika. Me\dj utim, kada se isti kabl upotrebi za Internet, tada je klju\v cno pitanje da li ga korsti 10 ili 10000 osoba. Ako jedan korisnik odlu\v ci da preuzme neku vrlo duga\v cku datoteku, propusni opseg \' ce prakti\v cno biti uskra\' cen svim ostalim korsnicima. \v Sto je vi\v se korisnika, bi\' ce i ve\' ce njihovo otimanje za propusni opseg. U telefonskom sistemu takvo ne\v sto ne postoji: kada preuzmete veliku datoteku preko ADSL linije, time ne ograni\v cavate propusni opseg svog suseda. S druge strane, propusni opseg koaksijalnog kabla je mnogo ve\' ci od propusnog opsega uparene parice.
+\\
+\\ Kablovske kompanije su problem re\v sile tako \v sto su duga\v cak kabl izdelile na segmente i svaki segment direktno spojile sa opti\v ckim \v cvorom. Propusna mo\' c veze izme\dj u centralnog koncentratora i svakog opti\v ckog \v cvora je prakti\v cno neograni\v cena, tako da se saobra\' caj mo\v ze neometano odvijati sve dok nema previ\v se pretplatnika na pojedina\v cnim segmentima kabla. 
+
+\subsection{Deljenje frekvencije}
+
+Svi TV signali su usmereni ka korisinku, zbog \v cega se za saobra\' caj od korisnika mogu upotrebljavati poja\v civa\v ci koji rade iskljuivo u poru\v cju 5-42 MHz, a za saobra\' caj ka korisniku poja\v civali koji rade po\v cev od 54 MHz pa navi\v se. Tako dobijamo asimetriju izme\dj u porpousnih opsega za prenos podataka od korisnika i ka korisniku zato \v sto iznad podru\v cja rezervisanog za televiziju posotji ve\' ci deo spektra, nego ispod nejga. S druge strane, o\v cekuje se da se saobra\' caj uglavnom odvija ka korisniku, pa operateri kablovskih mre\v za nemaju razloga da brinu. Na slici \ref{frekventni spektar} prikazan je frekventni spektar kablovske televizije.
+\\
+\\ Duga\v cki koaksijalni kablovi nisu ni\v sta bolji za prenos digitalnih signala od duga\v ckih lokalnih linija, pa je i kod njih potrebna analogna modulacija signala. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/frekvencije.png}
+	\caption{Raspodela frekventnih podru\v cja u tipi\v cnom sistemu kablovske televizije koji se korisniti za pristup Internetu.}
+	\label{frekventni spektar}
+\end{figure}
+
+\subsection{Kablovska ili ADSL}
+
+\noindent Kablovska:
+\\+ Koristi koaksijalne kablove ka korisnicima (dobar protok)
+\\- Podaci se \v salju svima, jer je magistrala (manja sigurnost)
+\\- Protok je deljen me\dj u korisnicima, pa mo\v ze varirati
+\\
+\\ ADSL(asimetri\v cna varijanta DSL-a):
+\\ + Protok je posve\' cen svakom korisniku
+\\ + Nema mogu\' cnost emitovanja kao kablovska
+\\ - Koristi upredene parice na korisnicima (ni\v zi protok)
 \section{Sloj veze, uloga, komunikacija sa slojem ispod i iznad, kratko objašnjenje spiska aktivnosti na sloju veze}
 (preuzeto iz beleški sa časa)\\
 
@@ -1323,15 +1481,15 @@ Emitovanje poruke svim čvorovima pomoću tehnike plavljenja (jednostavan mehani
 \begin{center}
 		\includegraphics[width=9cm, height=5cm]{plavljenje}\\
 \end{center}
-Plavljenje:
-\begin{enumerate}
-	\item Pravilo na svakom čvoru:
+Plavljenje:\\
+
+Pravilo na svakom čvoru:
 		\begin{enumerate}
-			\item Nakon pristizanja poruke, prosledi je svim ostalim susedima
-			\item Zapamti nekako poruku kako bi je ponovo prosleđivao ako ti opet stigne
+			\item Nakon pristizanja poruke, prosledi je svim ostalim susedima, ali ne šalji onom ko ti je poslao
+			\item Zapamti nekako poruku kako je ne bi ponovo prosleđivao ako ti opet stigne, da se ne bi dešavali ciklusi
 		\end{enumerate}
-	\item Neefikasno jer jedan čvor može da dobije višestruke kopije iste poruke
-\end{enumerate}
+Neefikasno jer jedan čvor može da dobije višestruke kopije iste poruke.
+
 \break
 \begin{center}
 		\includegraphics[width=9cm, height=5cm]{plavljenje1}\\
@@ -1348,6 +1506,452 @@ Poplava paketa se može ograničiti Itako što se povede računa o poslatim pake
 \\
 Da liste ne bi neogranično rasle, svakoj se pridružuje brojač k, čija vrednost znači da su kroz čvor prošli svi paketi do  rednog broja k. Kada stigne paket rednog broja manjeg od k, on se odbacuje kao duplikat. Lista paketa s redinm brojem manjim od k nije potrebna zato što ih k sve sumira.\\
 \\
-Moguće je omogućiti i ARQ (Automatic repeat request – protokol za kontrolu greške, ukoliko u paketu postoji greška, primalac traži od izvornog čvora da mu ponovo pošalje paket ), kako bi plavljenje bilo pouzdanije. 
+Moguće je omogućiti i ARQ (Automatic repeat request – protokol za kontrolu greške, ukoliko u paketu postoji greška, primalac traži od izvornog čvora da mu ponovo pošalje paket ), kako bi plavljenje bilo pouzdanije. \\
+
+
+Sa predavanja:
+\\
+Prilikom pamćenja dovoljno je zapamtiti izvor i redni broj. Prva ideja je da pamtim sve redne brojeve i čuvam u listu. Prolazim kroz listu i proveravam da li sam već dobio taj paket, međutim, to zahteva bafer proizvoljne veličine, a to se ne isplati. Alternativa je da pamtim izvor i redni broj poruke, a sledeću poruku pamtim samo ako ima veći redni broj (tu poruku sigurno nisam dobio). Redni broj povećavam samo ako sam siguran da sam dobio sve prethodne poruke, tj. povećavam ga samo ako je redni broj paketa koji je pristigao za jedan viši. Stigne poruka sa brojem 1, pamtim, pa sa brojem 3, pamtim i ne povecavam, pa sa brojem 2, pamtim i povećavam, pa opet sa 3, pa povećavam. Postoji mehanizam da se sazna da li su dobijene sve poruke. 
+
+\section{Rutiranje zasnovano na stanju veza}
+\section{Višeciljno rutiranje sa najkraćim putevima (ECMP)}
+\section{Hijerarhijsko rutiranje}
+\section{Transportni sloj, uloga, tipovi servisa i njihovo poređenje}
+\section{Socket API, primer jednostavnog klijent-servera (pseudokod), portovi}
+\section{UDP}
+\section{Uspostava i prekid veze na transportnom sloju (uopšteno)}
+\section{Protokoli kliznih prozora na transportnom sloju}
+\section{Kontrola toka podataka na transportnom sloju}
+\section{Retransmisije i prilagodljive pauze (tajmauti) na transportnom sloju}
+\section{TCP, svojstva, zaglavlje, realizacija kliznih prozora, uspostava i prekid veze (specifično)}
+\section{Zagušenje na transportnom sloju, opis problema i mehanizam za rešavanje AIMD}
+\section{Aplikativni sloj, uloga, interakcija sa slojem ispod, pregled Internet aplikacija.}
+
+
+\noindent Stigli smo do vrha! $:)$ Protokoli aplikativnog sloja su \v cesto deo aplikacije (program). Nemaju sve GUI, npr DNS. Slojevi ispod aplikacija obezbe\dj uju pouzdan transport, ali korisnik nema utisak da oni ne\v sto stvarno rade.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/aplikativni-sloj.png}
+	\caption{Aplikativni sloj}\label{aplikativni sloj}
+\end{figure}
+
+\noindent Poruke aplikativnog sloja se \v cesto dele na segmente, a ovi dalje obi\v cno pripadaju jedinstvernom paketu. Dakle, poruka aplikativnog sloja je u vi\v se IP paketa...
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/paketi.png}
+	\caption{Poruka podeljena u pakete}
+\end{figure}
+
+\noindent Aplikacijama treba ''sva\v sta''; ne\v sto od zahtevnih funkcionalnosti i ne postoji na transportnom sloju.
+\\
+\\ Primeri aplikacija:
+\begin{description}
+	\item[Web] naslanja se na TCP pa mu odgovara sekvenca poruka razli\v citih du\v zina i pouzdanost.
+	\item[DNS] TCP je skup za njega vi\v se mu odgovara UDP ali mu je potrebna pouzdanost pa se ona nadogra\dj uje na aplikativnom sloju.
+	\item[Skype] Odgovara mu UDP, iako nam deluje streaming (TCP - tok podataka). TCP ne mo\v ze jer bi bio previ\v se spor. Jedino tok treba da se nadogradi.
+\end{description}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/evolucija.png}
+	\caption{Evolucija Internet aplikacija}
+\end{figure}
+
+
+
+%%%%%
+%
+% PITANJE 47.
+%
+%%%%%
+
+\section{DNS, uloga, raniji pristup, moderni pristup, TLD, slogovi.}
+
+Ho\' cemo da pristupimo stranici na Internetu putem imena, a ne putem IP adrese jer je njih te\v sko pamtiti. Za\v sto je tako bolje?  U praksi se umesto ime, \v ce\v s\' ce koristi termin \textbf{domen}. Po\v sto ra\v cunarska mre\v za razume samo broj\v cane adrese, neophodan  je mehanizam koji \' ce tekstualna imena prevoditi u mre\v zne adrese. DNS upravo slu\v zi da za zadato ime dobijemo IP adresu.
+\\
+\\Imena su identifikatori resursa (kako se ne\v sto zove?), adrese su lokatori resursa (gde se \v sta nalazi?), a odre\dj ivanje adrese(eng. name resolution) je preslikavanje imena na adresu.
+
+\subsection{Raniji pristup}
+
+U doba ARPANET-a, postojala je datoteka HOSTS.TXT sa listom svih ra\v cunara i njihovih IP adresa (tabela preslikavanja). Imena su inicijalno bila nestruktuirana, a posle su postala hijerarhijska, npr. lcs.mit.edu. Ta\v cka razdvaja nivo hijerarhije. Svi ra\v cunari su je svake no\' ci morali preuzimati sa lokacije na kojoj je bila odr\v zavana. Za mre\v zu od nekoliko stotina ra\v cunara koji su radili sa podelom procesorskog vremena ovakav pristup je bio sasvim zadovoljavaju\' c. Me\dj utim, kada su se na mre\v zi priklju\v civale hiljade mini PC ra\v cunara, postalo je jasno da se takav pristup ne mo\v ze ve\v cno odr\v zati. Prvo, datoteka  bi postala ogromna. Drugo i va\v znije:  ako se sa imenima ne bi radilo na jednom mestu, stalno bi dolazilo do  njihovog sukobljavanja  na velikoj me\dj unarodnoj mre\v zi. U cilju re\v savanja ovih problema, stvoren je sistem imenovanja domena. 
+
+\subsection{Moderni pristup}
+ 
+Sistem (aplikacija) koja vr\v si preslikavanje imena u IP adresu. Ciljevi sistema su da bude 
+lak za upravljanje kada postoji veliki broj korisnika i efikasan. Pristup: distribuirana tabela, hijerahijskih organizovana. Koristi se automatski protokol za povezivanje delova hijerahije. Koreni \v cvor ''.'' (ta\v cka) se obi\v cno izostavlja.
+\\
+\\ Su\v stinu DNS-a  \v cini hijerarhijska struktura imena zasnovana na domenima i sistem distribuiranih baza podataka za realizaciju te hijerarhijske strukture. Prvenstveno se koristi za preslikavanje imena ra\v cunara i odredi\v sta elektronske po\v ste u IP adrese, ali mo\v ze se koristiti i u druge svrhe. 
+\\
+\\ Rad sa velikim skupom imena koja se stalno menjaju  nije jednostavan. Internet je organizaciono podeljen na preko 200 osnovnih (eng. top-level domains), pri \v cemu svaki domen obuhvata brojne ra\v cunare. Op\v sti domeni imaju op\v sta imena(prema delatnositima) ili nose imena dr\v zava. Dr\v zavnih domena, prema ISO standardu 3166, ima za svaku dr\v zavu po jedan. Svaki domen je sa svoje strane izdeljen u poddomene, a ovi u pod-poddomene itd. Svi domeni se mogu predstaviti stablom, kao na slici \ref{dns}. Listovi stabla predstavljaju domene koji nemaju poddomene (ali imaju ra\v cunare). List mo\v ze da predstavlja jedan ra\v cunar ili kompaniju sa hiljadama ra\v cunara. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/dns.png}
+	\caption{Deo imenskog DNS prostora na Internetu}\label{dns}
+\end{figure}
+
+\noindent Svaki domen se ozna\v cava uzlaznom putanjom do (neimenovanog) korena stabla. Komponente imena me\dj usobno se razdvajaju ta\v ckama. Imena domena mogu biti apsolutna i relativna. Za razliku od relativnog imena, apsolutno ime domena uvek se zavr\v sava ta\v ckom. Relativna imena se moraju tuma\v citi u okviru odre\dj enog konteksta da bi se jedinstveno utvrdilo njihovo zna\v cenje. U oba slu\v caja, imenovani domen se odnosi na odre\dj eni \v cvor stabla i na sve \v cvorove ispod njega. 
+
+\subsection{TDL}
+\noindent TLD-krovna imena(eng. Top-Level Domains) odr\v zava organizacija ICANN (Internet Corp. for Assigned Names and Numbers). Zapo\v cela sa radom 1998. godine; finansijki i politi\v cki interesi... Inicijalno 6 TLD: .com, .edu, .gov., .mil, .org, .net. Kasnije su dodati i : .aero, .museum, .xxx, ... Postoji oko 250 nacionalnih TLD. 
+
+
+\subsection{Slogovi}
+\noindent Svakom domenu, bez obzira na to da li sadr\v zi samo jedan ra\v cunar ili je u pitanju osnovni domen, mo\v ze se pridru\v ziti zapis resursa. Za jedan ra\v cunar, naj\v ce\v s\' ci zapis resursa je njegova IP adresa, ali postoje i brojne druge vrste zapisa resursa. Kada razre\v siva\v c DNS serveru preda ime domena, od njega dobija zapise resursa pridru\v zene tom imenu. Na taj na\v cin, osnovna funkcija DNS sistema jeste mapiranje (preskilavanje) imena domena u zapise resursa.
+\\
+\\ Zapis resursa je sastavljen od pet dubleta. Iako se zbog efikasnosti kodiraju binarno, obi\v cno se prikazuju tekstualno - po jedan red za svaki zapis. Mi \' cemo koristiti slede\' ci format: Ime\_domena, \v Zivotni\_vek, Klasa, Tip, Zna\v cenje. Ime\_domena je domen za koji resurs va\v zi. Obi\v cno za svaki domen posotji mnogo zapisa, a svaka kopija baze podataka sadr\v zi informacije o vi\v se domena. Zato je ovo polje priamrni klju\v c za pretra\v zivanje zapisa pri odgovaranju na zahteve.  \v Zivotni\_vek govori o stabilnosti zapisa. Vrlo stabilnim informacijama dodeljuju se veliki brojevi, a informacijama privremenog kataktera mala. Klasa je za podatke na internetu uvek \textit{IN}. Tip ozna\v cava vrstu zapisa. Vrednost mo\v ze da bude broj\v cana, da predstavlja ime domena ili da bude tekst. Najva\v zniji tipovi su prikazani na slici \ref{tab: dns zapis resursa}.
+
+\begin{table}[h]
+	\centering
+	\renewcommand{\arraystretch}{1.2}
+	\begin{tabular}{|l|l|}
+		\hline
+		Tip sloga & Zna\v cenje \\
+		\hline
+		SOA & Razni parametri zone... \\
+		\hline
+		A & IPv4 adrese imenovanih ra\v cunara \\
+		\hline
+		AAAA (''kvad A'') & IPv6 adrese imenovanih ra\v cunara \\
+		\hline
+		CNAME & Na koji ra\v cunar se \v salje www, ftp itd. \\
+		\hline
+		MX & Imena ra\v cunara koji se koriste za mejlove \\
+		\hline
+		NS & Server imena za zonu \\
+		\hline
+	\end{tabular}
+	\caption{Glavni tipovi DNS zapisa resursa}
+	\label{tab: dns zapis resursa}
+\end{table}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/slogovi.png}
+	\caption{Deo mogu\' ce DNS baze podataka za domen cs.vu.nl}\label{slogovi}
+\end{figure}
+
+
+
+
+%%%%%
+%
+% PITANJE 48.
+%
+%%%%%
+
+\section{DNS, zone, opis mehanizma za odre\dj ivanje adresa.}
+
+Teorijski, jedan jedni server imena bi mogao da sadr\v zi  \v citavu DNS bazu  podataka i zadovolji sve zahteve u pogledu imena ra\v cunara. Takav server bi bio toliko optere\' cen da bi prakti\v cno bio beskoristan. Tako\dj e, ako bi otkazao, \v citav Internet bi se sru\v sio. Da bi se izbegli takvi problemi, imenski DNS prostor je podeljen  u vi\v se zona koje se me\dj usobno ne preklapaju. Zona je neprekidno par\v ce prostora imena. Delegiranje je ''podela'' na podzone radi lak\v se i efikasnije organizacije. Jdna mogu\' cnost deljenja servera sa slike \ref{aplikativni sloj} prikazana je na slici \ref{zone}. Svaka zona sadr\v zi odre\dj eni deo stabla, kao i servere imena sa informacijama o doti\v cnoj zoni. Obi\v cno svaka zona ima primarni server koji informacije izvla\v ci iz datoteke na svom disku i jedan ili vi\v se seknudarnih servera imena koji informacije dobijaju od primarnog servera imena. Radi ve\' ce pouzdanosti, neki serveri se mogu nalaziti i izvan zone za koju rade. Gde se unutar zone postavljaju granice zavisi od njenog administratora. Odluka se donosi na osnovu broja servera imena  i njihovog razme\v staja. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/zone.png}
+	\caption{Deo imenskog DNS prostora podeljen u zone}\label{zone}
+\end{figure}
+
+
+Zone su osnov za dalju distribuciju. EDU registar je nadle\v zan za sva imena koja se zavr\v savaju sa .edu. UW nadle\v zan za imena sa sufiksomwashington.edu. CS\&E nadle\v zan za sufiks cs.washington.edu. Svaka zona ima nadle\v zni server imena. On zna kontakte za delegiranje, odnosno servere imena za podzone. Npr. server imena za .edu zna za server imena zone washington.edu.
+
+
+
+\subsection{Odre\dj ivanje adresa}
+
+DNS odre\dj ivanje adresa
+Neki ra\v cunar (klijent) kontaktira DNS kako bi mu ovaj poslao IP adresu nekog drugog ra\v cunara na Internetu
+Op\v sta ideja je da:
+Ra\v cunar kontaktira svoj najbli\v zi DNS (lokalni DNS)Lokalni DNS, ako ne zna tra\v zeno ime od ranije,zapo\v cinje tra\v zenje sa korenih servera imena (edu, com...)
+Pa se onda ide ni\v ze kroz hijerahiju...
+
+Kada razre\v siva\v c adresa dobije upit za ime domena, on ga prosle\dj uje nekom od lokalnih servera imena. Ako tra\v zenii domen spada u delokrug servera imena, kao \v sto ai.cs.yale.edu spada pod cs.yale.edu, server vra\' ca meritorne zapise resursa. Meritoran zapis poti\v ce iz autoritativnog izbora koji upravlja zapisima i zato je uvek ispravan. Meritorni zapisi su uvek a\v zurni, za razliku od ke\v siranih koji mogu i zastareti. Me\v sutim, ako je domen udaljen i o njemu nema lokalnih informacija, server imena \v salje poruku  sa upitom serveru imena osnovnog domena kome pripada tra\v zeni domen. Postupak \' cete lak\v se razumeti pomo\' cu slike \ref{odredjivanje adresa}. Razre\v siva\v c na ra\v cunaru flits.cs.vu.nl \v zeli da sazna IP adresu ra\v cunara linda.cs.yale.edu. U prvom koraku , on \v salje upit lokalnom serveru imena, ra\v cunaru cs.vu.nl. Upit sadr\v zi ime tra\v zenog domena, tip (A) i klasu (IN).
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/razresavanje-adresa.png}
+	\caption{Razre\v siva\v c u 8 koraka pronalayi adresu  udaljenog ra\v cunara.}\label{odredjivanje adresa}
+\end{figure}
+
+\noindent Pretpostavimo da lokalni server imena nikada ranije nije imao upit za takav domen i ne zna ni\v sta o njemu. On mo\v ze da se raspita kod susednih servera imena, ali ako ne sazna ni\v sta, on \v salje UDP paket serveru imena osnovnog domena edu koji postoji u njegovoj bazi podataka, ra\v cunaru edu-server.net. Male su \v sanse da ovaj server zna adresu ra\v cunara linda.cs.yale.edu, verovatno ni adresu domena cs.yale.edu, ali on mora poznavati sve svoje potomke, tako da upit prosle\dj uje serveru imena domena yale.edu (korak 3). Ovaj, pak, prosle\dj uje upit serveru imena poddomena cs.yale.edu (korak 4), koji mora imati mritorne zapise resursa. Po\v sto se svaki upit prosle\dj uje od klijenta ka serveru, zapis resursa se vra\' ca istim putem (koraci 5 do 8).
+\\
+\\ Kada zapisi stignu na server imena poddomena cs.vu.nl, bele\v ze se u njegov ke\v s, za slu\v caj da opet zatrebaju. Me\dj utim, ti podaci nisu meritorni jer se izmene u domenu cs.yale.edu ne\' ce automatski pro\v siriti u sve ke\v s memorije \v sirom svera. Zbog toga, podaci u ke\v su ne treba da se dugo \v cuvaju. To je i razlog \v sto u svakom zapisu resursa postoji polje \textit{\v Zivotni vek}. Njegova vrednost saop\v stava udaljenim serverima imena koliko dugo treba da \v cuvaju zapis. Ako neki ra\v cunar svoju IP adresu ne menja godinama, onda se takva informacija mo\v ze \v cuvati u ke\v su do jednog dana. Manje stabline informacije treba brisati ve\' c posle nekoliko sekundi ili minuta.
+\\
+\\ Opisani postupak uzastopnog slanja upita naziva se \textbf{rekurzvino ispitivanje} (rekurzivan DNS),  po\v sto svaki server koji nema tra\v zenu informaciju upit prosle\dj uje dalje, a odgovor istim putem prosle\dj uje natrag. Mo\v ze se postupiti i druga\v cije. Ako lokalni server ne zna odgovor na upit, on to klijentu saop\v stava i istovremeno mu \v salje ime slede\' ceg servera koji mo\v zda zna odgovor. Neki serveri ne vr\v se rekurzivno ispitivanje, ve\' c na upit uvek odgovaraju imenom slede\' ceg servera. Taj pristup se naziva iterativno ispitivanje (iterativan DNS). Rekurzivni Smanjuje optere\' cenje onome ko zahteva informaciju i omogu\' cava pam\' cenje (ke\v siranje) za prethodne upite, \v sto mo\v ze pobolj\v sati performanse na strani onoga ko pita. Sa druge strane, iterativni ne zahteva veliku memoriju, samo pam\' cenje direktnih potomaka (servera imena ni\v zeg nivoa) i to je jedini izbor ukoliko se DNS ''bombarduje'' zahtevima, kao npr. koreni DNS serveri.
+\\
+\\ Ukoliko DNS klijent koji tokom roka odre\dj enog tajmerom ne dobije odgovor na upit, slede\' ci upit \v salje drugom serveru. Ovde se pretpostavlja da odgovor nije stifao zato \v sto je server isklju\v cen, a ne zato \v sto su se upit ili odgovor izgubili.
+\\
+\\ Ka\v snjenje u odre\dj ivanju imena treba da bude malo - kako ne bi predugo \v cekali za npr. u\v citavanje sajta. Ako je ime ke\v sirano u DNS serveru, on odgovara momentalno, bez pitanja drugih DNS. Informacije o delu imena se tako\dj e mogu iskoristiti. Odgovori od DNS u sebi sadr\v ze TTL za ke\v siranje.
+\\
+\\\textbf{Lokalni DNS server}
+\\
+\\ Obi\v cno u vlasni\v stvu firme ili ISP, ali mogu biti i na klijentu ili AP (pristupnoj ta\v cki). Postoje i javno dostupni npr. Google javni DNS. Klijenti moraju da znaju ko im je lokalni DNS. Ovo se obi\v cno pode\v sava putem DHCPo istom tro\v sku kada se ra\v cunaru u mre\v zi \v salje sopstvena IP adresa.
+\\
+\\ \textbf{Koreni DNS serveri}
+\\
+\\ Koreni ''.'' DNS \v cini zapravo 13 servera - a.root-servers.net do m.root-servers.net. Njihove IP adrese su fiksirane u pode\v savanjima svih drugih DNS servera. Zapravo ima $>$250 repliciranih korenih DNS servera. Npr. za a.root-servers.net mo\v ze biti dvadesetak razli\v citih fizi\v ckih ma\v sina koje se mapiraju na ovo ime (u zavisnosti od blizine onoga ko zahteva -anycast). Vrlo su pouzdani i efikasni.
+
+
+
+
+%%%%%
+%
+% PITANJE 49.
+%
+%%%%%
+
+\section{HTTP protokol, preuzimanje Veb dokumenata.}
+
+Protokol za prenos podataka koji se koristi \v sirom Veba zove se protokol za prenos hiperteksta. Njime se defini\v su poruke koje klijenti mogu da \v salju serverima, kao i odgovori od servera. Svaka interakcija sadr\v zi jedan tekstualni (ASCII) zahtev i odgovor tipa MEME prema standardu RFC 822. Svi klijenti i serveri moraju da po\v stuju ovaj protokol. To je osnovni protokol za preuzimanje Internet dokumenata. Internet stranice su tako\dj e vid dokumenta. Ta\v cnije bi bilo WWW (ili samo Veb) dokumenti jer WWW je skup svih povezanih dokumenata (logi\v cki nivo), a Internet se odnosi na skup povezanih ma\v sina (fizi\v cki nivo).
+
+\subsection{Veze}
+
+\v Cita\v c se sa serverom obi\v cno povezuje tako \v sto uspostavi TCP vezu s njegovim priklju\v ckom (portom) 80.  Vrednost TCP veze ogleda se u tome \v sto ni \v cita\v ci ni serveri ne moraju da brinu o izgubljenim porukama, duplikatima, dugra\v ckim porukama ili potvrdama, o tome misli TCP.
+\\
+\\ U verziji 1.0 protokola HTTP, po\v sto se veza uspostavi, \v salje se samo jedan zahtev i dobija se samo jedan odgovor. Tada se TCP veza raskida. Kada su se Veb strane sastojale isklju\v civo od HTML teksta, takav postupak je sasvim odgovarao. Me\dj utim, Veb strane su se ubrzano kitile raznim vizuelnim ukrasima, pa je uspostavljanje TCP veze za preno\v senje samo jedne ikonice ili slike postalo preskupo. Iz tog razloga nastala je verzija 1.1 protokola HTTP, koja podr\v zava trajne veze. Sada su se protokolom HTTP, nakon uspostavljanja TCP veze i jednokratne razmene zahteva i odgovora, mogli slati i dodatni zahtevi i primati odgovori na njih. Time je smanjen broj nepotrbnih operacija po zahtevu. Koristi se i na strani klijenta (pregleda\v c) i na strani servera (Veb server).
+
+\subsection{Koraci u preuzimanju Veb dokumenata}
+
+\begin{enumerate}
+	\item Odre\dj ivanje IP adrese
+	\item Uspostavljanje TCP veze sa serverom (ma\v sinom na ciljnoj IP adresi)
+	\item Slanje HTTP zahteva za konkretnim dokumentom na serveru
+	\item (\v Cekanje HTTP odgovora)
+	\item Izvr\v savanje ili preuzimanje ugra\dj enih dokumenata (slika, videa, ...)
+	\item Ga\v senje TCP veza (ili veza)
+\end{enumerate}
+
+
+\subsection{Stati\v cki i dinami\v cki Veb dokumenti}
+
+\noindent Stati\v cki Veb dokumenti su datoteke sa fiksnim sadr\v zajem, npr. slika, video, stati\v cka html stranica, ... Dinami\v cki Veb dokument je datoteka dobijena kao rezultat izvr\v savanja programa: Npr. html strana dobijena kao rezultat pretrage na Google.
+\\
+\\ Veb strane se za sada pi\v su jezikom za ozna\v cavanje hiperteksta (HTML). HTML omogu\' cava korisnicima da prave Veb strane s tekstom, grafikom i pokaziva\v cima na druge Veb strane. Slu\v zi za ozna\v cavanje, to je jezik koji opisuje formatiranje strane. Klijent \v salje ime datoteke serveru, koji mu tada vra\' ca datoteku. Na po\v cetku razvoja Veba, sav sadr\v zaj je bio ovako stati\v can (sve same datoteke). U novije vreme, sadr\v zaj je postao dinami\v cniji - vi\v se se ne isporu\v cuje gotov sa diska, ve\' c se generi\v se na zahtev. Sadr\v zaj se mo\v ze generisati na serveru ili na klijentskom ra\v cunaru. 
+\\
+\\ Za dinami\v cko generisanje na serveru koriste se CGI skriptovi, ugra\dj uju PHP kodovi, strane Java servera (\textit{JSP}, sli\v cno PHP-u, samo \v sto se koristi Java a ne PHP), aktivne serverske strane(\textit{ASP}, Microsoft-ova verzija tehnika PHP i JSP). Izbor izme\dj u tehnika obi\v cno je uslovljen vi\v se politikom nego tehnologijom, po\v sto su sva tri jezika me\dj usobno uporediva. 
+\\
+\\ Najpopularniji jezik za pisanje skriptova koji se izvr\v savaju na strani klijenta jeste JavaScript. Kao i drugi jezici za pisanje skriptova, i ovaj je vrlo viskog nivoa. Druga popularna metoda koristi aplete. To su mali programi pisani na Javi i prevedeni u instrukcije ma\v sinskog jezika za virtuelni ra\v cunar zvan Java virtuelna ma\v sina. Apleti se mogu ugraditi u HTML strane i interpretirati u \v cita\v cima koji imaju JVM. Sli\v can koncept je i kod ActiveX kontrole koja je razvijena od strane Microsoft-a.
+\\
+\\
+\noindent\textbf{Komande koje se koriste pri formiranju zahteva}
+
+
+\begin{table}[h]
+	\centering
+	\renewcommand{\arraystretch}{1.2}
+	\begin{tabular}{|l|l|}
+		\hline
+		\textbf{Metoda} & \textbf{Opis} \\
+		\hline
+		GET & Zahtev za u\v citavanje Veb strane \\
+		\hline
+		HEAD & Zahtev za u\v citavanje zaglavlja Veb strane \\
+		\hline
+		PUT & Zahtev za skladi\v stenje (upisivanje) Veb strane \\
+		\hline
+		POST & Dopunjavanje imenovanog resursa (npr. Veb strane) \\
+		\hline
+		DELETE & Uklanjanje Veb strane \\
+		\hline
+		TRACE & Slanje odjeka dolaznog zahteva \\
+		\hline
+		CONNECT & Rezervisano za budu\' cu upotrebu \\
+		\hline
+		OPTIONS & Pregledanje izvesnih operacija \\
+		\hline
+	\end{tabular}
+	\caption{Ugra\dj ene HTTP metode zahtevanja}
+	\label{tab: metodi}
+\end{table}
+
+\noindent Na svaki zahtev \v salje se odgovor koji sadr\v zi statusni red, a mo\v zda i dopunske informacije. Statusni red sadr\v zi trocifren statusni k\^ od kojim se saop\v stava da li je zahtev zadovoljen ili nije, a ako nije, i za\v sto. U tabeli \ref{tab: kodovi} prikazani su razli\v citi odgovori prema statusnom kodu.
+
+\begin{table}[h]
+	\centering
+	\renewcommand{\arraystretch}{1.2}
+	\begin{tabular}{|l|l|l|}
+		\hline
+		\textbf{Kod} & \textbf{Zna\v cenje} & \textbf{Primeri} \\
+		\hline
+		1xx & Informacija & 100 $=$ server prihvata zahtev \\
+		\hline
+		2xx & Uspeh & 200 $=$ zahtev uspeo \\
+		\hline
+		3xx & Preusmerenje & 301 $=$ dokument pomeren \\
+		\hline
+		4xx & Gre\v ska klijenta & 403 $=$ zabranjen pristup; 404 $=$ nema dokumenta \\
+		\hline 
+		5xx & Gre\v ska servera & 500 $=$ interna logi\v cka gre\v ska \\
+		\hline
+	\end{tabular}
+	\caption{Grupe odgovora prema statusnom kodu}
+	\label{tab: kodovi}
+\end{table}
+
+\noindent Dodatne zaglavlja zahteva ili odgovora:
+
+\begin{table}[h]
+	\centering
+	\renewcommand{\arraystretch}{1.2}
+	\begin{tabular}{|l|l|}
+		\hline
+		\textbf{Funkcija} & \textbf{Primeri zaglavlja} \\
+		\hline 
+		\begin{tabular}{l}
+			Info o pregleda\v cu \\ (klijent$\longrightarrow$server)
+		\end{tabular}
+		& 
+		\begin{tabular}{l}
+			User-Agent,Accept, Accept-Charset, \\ Accept-Encoding, Accept-Language
+		\end{tabular}
+		\\
+		\hline
+		\begin{tabular}{l}
+			Info o ke\v siranju \\ (oba smera)
+		\end{tabular}
+		& 
+		\begin{tabular}{l}
+			If-Modified-Since,If-None-Match, \\ Date, Last-Modified, Expires,\\ Cache-Control, ETag
+		\end{tabular}
+		\\
+		\hline
+		\begin{tabular}{l}
+			Stanje pregleda\v ca \\ (klijent$\longrightarrow$server)
+		\end{tabular}
+		& 
+		\begin{tabular}{l}
+			Cookie, Referer, \\ Authorization, Host
+		\end{tabular}
+		\\
+		\hline
+		\begin{tabular}{l}
+			Tip sadr\v zaja \\ (server$\longrightarrow$klijent)
+		\end{tabular}
+		& 
+		\begin{tabular}{l}
+			Content-Encoding,Content-Length, \\ Content-Type, Content-Language, \\ Content-Range, Set-Cookie
+		\end{tabular}
+		\\
+		\hline
+	\end{tabular}
+\end{table}
+
+
+
+%%%%%
+%
+% PITANJE 50.
+%
+%%%%%
+
+\section{HTTP performanse.}
+
+\subsection{PLT - vreme u\v citavanja dokumenta(eng. Page Load Time)}
+
+\noindent PLT je klju\v cna mera performansi. To je vreme proteklo od klika do u\v citavanja dokumenta. \v Cak i malo pove\' canje PLT ima velik uticaj na smanjenje zadovoljstva korisnika. PLT zavisi od mnogo faktora - struktura dokumenta, verzije HTTP (i TCP!) protokola, mre\v znog protoka i RTT.
+\\
+\\ HTTP/1.0 koristio jednu TCP vezu da preuzme sve dokumente. Prednost je jednostavna implementacija, me\dj utim, veoma je lo\v s PLT…
+
+\subsection{Na\v cini za smanjenje PLT}
+
+\begin{enumerate}
+	\item Smanjivanje poslatog sadr\v zaja - manje slike, gzip kompresija
+	\item Prilago\dj avanje HTTP da bolje koristi protok
+	\item Izbegavanje ponovnih istih HTTP zahteva - Ke\v siranje i Veb proksiji
+	\item Pomeranje sadr\v zaja da bude bli\v zi korisniku - CDN 
+\end{enumerate}
+
+\noindent\textbf{Paralelne TCP veze}
+\\ Jednostavan na\v cin za pobolj\v sanje PLT. Pregleda\v c npr. istovremeno radi sa 8 HTTP konteksta. Svaki kontekst pravi odvojenu TCP vezu. Server ne zahteva promenu, samo klijent odnosno pregleda\v c. Sada 8 HTTP veza mo\v ze bolje da iskoristi dostupni protok. Sve rade istovremeno, pa se ne gomilaju ka\v snjenja koja nastaju zbog uspostava TCP veza.
+\\
+\\ \textbf{Trajne (vi\v sestruko upotrebljive) veze}
+\\ Umesto paralelnih TCP veza, mo\v ze se koristiti i trajna (vi\v sestruko upotrebljiva) veza. Napravi se jedna TCP veza za sve resurse ka jednom serveru. Ona se posle deli me\dj u nezavisnim HTTP zahtevima ka tom serveru. Proksi se koristi da bi se ke\v s delio izme\dj u vi\v se korisnika. Proksi ima ve\' ci ke\v s od pregleda\v ca jer slu\v zi za vi\v se korisnika, samim tim bi\' ce ve\' ca koli\v cina podataka koju treba ke\v sirati.
+
+%%%%%
+%
+% PITANJE 51.
+%
+%%%%%
+
+\section{HTTP ke\v siranje i HTTP proksiji}
+
+HTTP ke\v siranje i HTTP proksiji omogu\' cava vi\v sestruke upotrebe istog sadr\v zaja. Korisnici \v cesto pose\' cuju istu stranicu vi\v se puta. Ovo omogu\' cava \v cuvanje lokalne kopije. Ke\v siranje podrazumeva \v cuvanje i upotrebu lokalne kopije. Kopija se smatra za ispravnu ako nije istekla Server dostavlja vreme isticanja sadr\v zaja u vidu dodatnog polja (obi\v cno se zove ''expires''). Ako je kopija ispravna, koristi se u toj formi, pa nije potrebno preuzimanje sa servera. Ako kopija nije lokalno ispravna, mora se izvr\v siti provera ispravnosti kopije na serveru.
+\\
+\\ Klijent \v salje serveru uslovni GET zahtev (u kojem su i informacije o lokalnoj kopiji). Na osnovu njih server saznaje da li je lokalna kopija zastarela
+i u skladu sa tim \v salje/ili ne \v salje novi sadr\v zaj. Mogu\' ca je i provera zasnovana na sadr\v zaju upotrebom ''Etag'' zaglavlja – neki vid he\v s koda. Veb strane sa dinami\v ckim sadr\v zajem nikada ne ntreba ke\v sirati jer se parametri mogu izmenjati od zahteva do zahteva. Za takve i sli\v cne slu\v cajeve postoji op\v sti mehanizam pomo\' cu koga server obave\v stava sve zastupnike na putanji do klijenta da teku\' cu stranu ne koriste ponovo dok ne provere njenu sve\v zunu. Taj mehanizam se mo\v ze upotrebiti za sve strane za koje se o\v cekuje da se \v cesto menjaju.
+\\
+\\\textbf{Ke\v siranje unapred}
+\\ Kada proksi preuzme stranu od servera, on na njoj mo\v ze da potra\v zi hiperveze,a zatim da od odgovaraju\' cih servera preuzme strane na koje hiperveze ukazuju i smesti ih u svoj ke\v s - za svaki slu\v caj. Ta tehnika mo\v ze da skrati vreme pristupanja pri uzastopnim zahtevima, ali i zatrpava komunikacione linije stranama koje niko nikada ne tra\v zi.
+\\
+\\ Pri odre\dj ivanju perioda \v cuvanja strane u ke\v su, osnovni \v cinilac je stepen sve\v zine podataka koji korisnici mogu da prihvate. Ukoliko proksi prebrzo odbacuje ke\v sirane strane, gotovo uvek \' ce imati sve\v ze podatke, ali ne\' ce raditi efikasno. Ako strane \v cuva predugo, korisnici \' ce ih uglavnom tamo i na\' ci, ali \v cesto sa bajatim podacima. Postoji dva na\v cina za re\v savanje problema. Prvi na\v cin je pronala\v zenje sistema na osnovu koga bi se moglo zaklju\v citi koliko dugo treba \v cuvati stranu. Osnova za to je obi\v cno zaglavlje \textit{Last-Modified}. Ako je strana izmenjenapre jedan sat, ona se u ke\v su \v cuva tako\dj e jedan sat. Ako je izmenjena pre godinu dana, o\v cigledno je veoma stabilna i zato se \v cuva godinu dana uz razumno o\v cekivanje da se tokom tog perioda ne\' ce izmeniti. Ovakav sistem u praksi \v cesto radi dobro, ali se o u njemu. s vremena na vreme, mogu na\' ci zastarele strane.
+\\
+\\ Drugi na\v cin je skuplji, ali otklanja rizik od zastarevanja strana pomo\' cu specijalnih mogu\' cnosti rada sa ke\v som. Najkorisnija mogu\' cnost je zaglavlje \textit{If-Modified-Since}, koje proksi mo\v ze da po\v salje serveru. Njime se nazna\v cava strana koju zastupnik tra\v zi i vreme kada je ona poslednji put menjana. Ako strana od tada nije menjana, server odgovara kratkom porukom \textit{Not Modified} (statusni kod 304), \v sto zna\v ci da proksi mo\v ze da upotrebi ke\v siranu stranu. Ukoliko je strana od tadamenjana, server \v salje sve\v zu stranu. Iako je za ovaj pristup uvek potrebno razmeniti poruke sa zahtevom i odgovorom, odgovor je veoma kratak ako je strana u ke\v su jo\v s uvek sve\v za. 
+
+
+
+
+
+\subsection{HTTP proksiji}
+Proksi je posrednik izme\dj u grupe klijenata i veb servera. Razli\v citi klijenti tako\dj e mogu da koriste isti sadr\v zaj tako da ima smisla ke\v sirati sadr\v zaj i za grupu klijenata, a ne samo pojedinca. Dodatno, u proksi se mogu ugraditi i sigurnosni mehanizmi, zabrana sadr\v zaja (cenzura) i sli\v cno... To je korisno za kompanije, organizacije, ISP, ... Kljient kontaktira proksi;proksi potom potencijalno kontaktira server.
+\\
+\\ Klijenti mogu da \v salju zahteve proksiju umesto pravom serveru, ali mogu i da koriste ke\v s svog pregleda\v ca. Proksiju se obra\' ca nakon \v sto pregleda\v c poku\v sa da zadovolji zahtev podacima iz svog ke\v sa. Dakle, proksi obezbe\dj uje drugi nivo ke\v siranja.
+\\
+\\ Veb proksi pru\v za dodatne pogodnosti koje su \v cesto faktor u odluci za njihovu upotrebu. Jedna od prednosti je to \v sto filtriraju sadr\v zaj. Administrator mo\v ze podesiti crnu listu sajtova ili neki drugi na\v cin filtriranja zahteve. Druga korist od kori\v s\' cenja proksija je privatnost ili anonimnost - proksi \v stiti identitet korisnika od servera.
+
+
+%%%%%
+%
+% PITANJE 52.
+%
+%%%%%
+
+\section{CDN}
+
+Kao odgovor na zahteve potro\v sa\v ca, veoma velike koli\v cine propusnog opsega su snabdeveni u sr\v z interneta, i br\v zi \v sirokopojasnog povezivanja je ugra\dj en u mre\v ze. Pove\' can protok je klju\v c za pobolj\v sanje performansi,
+ali to je samo deo re\v senja. Da biste smanjili beskrajna ka\v snjenja, istra\v ziva\v ci su razvili razli\v cite arhitekture tako da se iskoristi propusni opseg za distribuciju sadr\v zaja.
+\\
+\\
+Jedna arhitektura je CDN (Content distributivne mre\v ze). U njoj, provajder postavlja distribuiranu kolekciju ma\v sina na lokacijama unutar interneta i koristi ih za prikazivanje sadr\v zaja sa klijentima.
+\\
+\\ Ideja je efikasna isporuka \v cesto kori\v s\' cenog sadr\v zaja: smanjuje \v cekanje, smanjuje potro\v snju ukupnog protoka. Ideja: postaviti popularan sadr\v zaj bli\v ze klijentima.
+\\
+\\ Prvi nivo je upotreba lokalno ke\v siranja (pregleda\v c) i ke\v siranja na proksijima. Poma\v ze, ali je ograni\v ceno na sadr\v zaje koje u\v cestalo koristi pojedinac ili grupa pojedinaca.
+\\\v Sta ako je sadr\v zaj popularan na vi\v sem nivou, npr. slike sa socijalnih mre\v za, video spotovi itd. Onda kopije \v zelimo da postavimo geografski ciljano. Ovo se mo\v ze svesti na upotrebu DNS-a.
+\\ 
+\\ DNS odre\dj ivanje adrese mo\v ze da dodeli razli\v cite odgovore razli\v citim klijentima. Svakom klijentu se da IP adresa najbli\v ze kopije umesto IP adresa glavnog servera na osnovu lokacije klijenta. Na slici, korisnici koji pristupaju sadr\v zaju iz Sidneja \' ce biti preusmereni na \v cvor u Sidneju a oni koji pristupaju sadr\v zaju iz Amsterdama \' ce biti preusmereni na \v cvor u Amsterdamu.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{slike-aplikativniSloj/cdn.png}
+\end{figure}
+
+%%%%%
+%
+% PITANJE 53.
+%
+%%%%%
+
+\section{P2P}
+
+Ali ne mo\v ze svako da postavi 1000 CDN \v cvorova na lokacijama \v sirom sveta kako bi ra\v sirili svoj sadr\v zaj.
+Osnovna ideja je P2P (peer-to-peer) deljenja datoteka kroz mre\v zu je da su mnogi ra\v cunari udru\v ze svoje resurse formiraju sistem za raspodelu sadr\v zaja. To su \v cesto jednostavni ku\' cni ra\v cunari. Oni ne moraju da budu ma\v sine u centrima internet podataka. Ra\v cunari se zovu kolege (peer), jer svaki naizmeni\v cno mo\v ze da deluje kao klijent ili drugi peer, pru\v zaju\' ci sadr\v zaj na drugim kolegama. Ono \v sto je kod peer-to-peer sistema zanimljivo je da nema posve\' cene infrastrukture, za razliku od CDN.
+Svako u\v cestvuje na zadatku distribucije sadr\v zaja, i \v cesto ne postoji centralni \v cvor.
+\\
+\\ Svaki \v cvor mora da nau\v ci gde se nalazi sadr\v zaj. Za to se koriste DHT distribuirane he\v s tabele (eng. Distributed Hash Tables). DHT  koriste algoritme za rad sa distribuiranim indeksom. Indeks je distribuiran preko svih \v cvorova. Indeks za tra\v zeni sadr\v zaj daje spisak svih \v cvorova koji ga sadr\v ze. Svaki \v cvor ima pristup indeksu.
+\\
+\\ BitTorrent je standardni P2P sistem koji se danas koristi. Karakteri\v se ga veoma brz rast, mogu\' cnost prenosa velikih datoteka. \v Cini veliki deo Internet saobra\' caja danas. Koristi se za legalni i ilegalni sadr\v zaj. Dostavljanje podataka vr\v si se posredstvom ''torenata''. Torrent datoteka sadr\v zi meta podatke poput spiska datoteka, veli\v cine, lokacije trackera. Sadr\v zaj se \v salje u delovima zbog paralelizma. Tracker serveri – ra\v cunari \v cija je namena da pamte spiskove  \v cvorova koji poseduju odre\dj enu datoteku (danas se sve manje koriste zbog pojave DHT)
+\\
+\\ Kako BitTorrent radi?
+\\
+Koraci u radu protokola:
+\begin{enumerate}
+	\item Zapo\v cinje sa sa torrent datotekom. U njoj su ili lokacija  Tracker servera ili informacije potrebne da bi se kontaktirao DHT
+	\item Razmena podataka se vr\v si sa razli\v citim \v cvorovima. Imam delove sadr\v zaja koji treba drugima, drugi imaju delove sadr\v zaja koji treba meni - trgovina
+	\item \v Sto vi\v se delova \v saljem, vi\v se i dobijam. Odlazni saobra\' caj prema nekom \v cvoru \' ce pratiti dolazni saobra\' caj sa njega.
+	\item \v Cvorovi koji imaju sadr\v zaj ili \v zele da ga preuzmu se pove\v zu i zapo\v cinju razmene
+	\item Delovi koji se \v salju su obi\v cno nasumi\v cno izabrani. Ako bi se slali redom, mogu\' cnost trgovine bi se zna\v cajno smanjila.
+	\item Ako \v cvor samo uzima podatke i ne \v salje, on se zove pijavica i ako ne nastavi da sara\dj uje komunikacija prema njemu se obustavlja.
+\end{enumerate}
 
 \end{document} % The document ends here
