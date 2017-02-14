@@ -587,12 +587,130 @@ Primer: želimo da pošaljemo niz bitova 1101011111 (polinom $ x^{9}+x^{8}+x^{6}
 CRC detekcija se radi i na višim slojevima, ne samo na sloju veze.
 
 \section{Korekcija grešaka u sloju veze}
-uskoro
-\section{Sloj veze, tipovi servisa, okruženje, utopijski jednosmerni protokol}
-uskoro
-\section{Kontrola toka, ARQ, pauze (tajmauti), duplikati, protokol „stani i čekaj“ za savršen i nesavršen kanal}
-Kontrola toka je sinhronizacija komunikacije između pošiljaoca i primaoca. Primaoc ne sme da bude zatrpan od strane pošiljaoca.
+(preuzeto iz beleški sa predavanja)\\
 
+Moguće je konstruisati kodove koji su  u stanju i da poprave grešku. Jedni od takvih su Hamingovi kodovi za korekciju koji imaju Ham. rastojanje koda 3. \\
+Šta će nam korekcija, ako možemo da detektujemo i uradimo retransmisiju? Postoje situacije kad nam je bolje jedno, a kad drugo. Odlučivanje o tome šta ćemo koristiti je bazirano na nekim parametrima. Jedan od tih parametara je način dešavanje greške, tj. distribucija greške.\\
+ Ako se dešavaju rafalne greške, nepredviđene, bolje je koristiti detekciju sa retransmisijom jer se greška javlja npr. jednom u 100 paketa, a za detekciju je potrebno manje bitova nego za korekciju (ako bismo koristili korekciju, to znači da bismo za svakih 100 paketa uvek slali više podataka nego što je potrebno za detekciju). Znači detekcija se koristi \textit{kad su greške neočekivane, tj. retke i rafalne, a kad se dese, onda nema veze i ako su velike}.Najčešće se koristi u sloju veze u kombinacijisa retransmisijom okvira.\\
+ Ako imamo neki šum koji se stalno javlja, loše je raditi detekciju sa retransmisijom jer postoji mogućnost da ćemo za svaki paket da radimo retransmisiju i zato koristimo korekciju. Znači, korekcija se koristi \textit{kad su greške očekivane, tj. šum se javio ili kada nema vremena za retransmisiju} i najčešće se radi na fizičkom sloju.\\\\
+
+Intuicija iza kodova za korekciju grešaka objašnjena u nekom od prethodnih pitanja.\\
+
+\textbf{Hamingov kod za korekciju:}\\
+
+Ideja je da se kontrolni bitovi stavljaju na pozicije koje predstavljaju stepene dvojke, a na preostalim mestima upisujem bitove za podatke. Kontrolni bitovi služe da napumpaju prostor redudantnosti. Koriste se n bitova podataka i k kontrolnih bitova gde važi $n = 2^{k}-k-1$ (npr. n=4, k=3). Kontrolni bit na poziciji \textit{i} se dalje računa kao bit parnosti za bitove čije pozicije u binarnoj reprezentaciji imaju 1 na \textit{i}-tom mestu. Npr. ako imamo 7 pozicija, 4 za podatke (neka je podatak npr. 0101), 3 za kontrolne bitove (pozicije 1,2,4), onda bit 1 pokriva pozicije 1,3,5,7 (1=0001,3=0011...to su pozicije koje imaju 1 u svom binarnom zapisu), bit 2 pokriva poziije 2,3,6,7 (2=0010, 3=0011,..), a bit 4 pokriva pozicije 4,5,6,7 (4=0100, 5=0101, …). Dobijamo:
+\begin{center}
+	\includegraphics[scale=0.5]{korek}
+\end{center}
+gde se kontrolni bit na poziciji 1 računa kao $ p_{1} = 0+1+1 = 0$ što su vrednosti na pozicijama 3,5,7 bez pozicije 1, jer za poziciju jedan računamo kontrolni bit. Dalje imamo: $ p_{2} = 0+0+1 = 1$ i $ p_{4} = 1+0+1 = 0$. Ovakav niz od 7 bitova se šalje.\\
+
+Kada primalac primi ovaj niz bitova, on ponavlja isti proces. Ponovo računa kontrolne bitove tako što sabira odgovarajuće pozicije. Pretpostavimo da je stigla poruka sa greškom, 0100111. Primalac racuna kontrolni bit kao zbir bitova na pozicijama 1,3,5,7. $ p_{1} = 0+0+1+1 = 0$. Isto radi i za kontr. bit $ p_{2} = 1+0+1+1 = 1$ (odmah signalizira da je doslo do greške, čim se nije dobila nula). Računa i $ p_{4} = 0+1+1+1 = 1$. Nakon ovoga složi dobijene kontrolne bitove kao binarni broj i dobije \textit{sindrom} (u ovom slučaju je to 110) koji otkriva na kojoj poziciji je došlo do greške. Korekcija će se izvršiti komplementiranjem bita na toj poziciji. Kada je sindrom jednak nuli, onda nema greške.\\
+
+Ovaj algoritam se obično ne koristi u praksi, već neki mnogo složeniji algoritmi kao što su:
+\begin{itemize}
+  \item Konvolucioni kodovi (omogućavaju korekciju grešaka za k bitova odjednom)
+  \item Rid-Solomonovi kodovi
+  \item Metoda parnosti za malu gustinu (LDPC-low density parity check) 
+\end{itemize}
+\section{Sloj veze, tipovi servisa, okruženje, utopijski jednosmerni protokol}
+(preuzeto iz beleški sa časa)\\
+
+\subsection{Tipovi servisa}
+
+\begin{enumerate}
+  \item \textbf{Servis bez uspostave veze i bez potvrde prijema}\\
+  Šalju se okviri bilo kojim redosledom, na drugu stranu ne moraju da stižu u redosledu u kojem smo slali. Nemamo mehanizam da utvrdimo da li je stiglo, ako se desi greška, ispraviće se u višem sloju, neće se vršti retransmisija, tj. pouzdanost se odlaže višim nivoima jer se retko dešavaju greške. Ovo se radi zbog brzine. Primer je Eternet.
+  \item \textbf{Servis bez uspostave veze i sa potvrdom prijema}\\
+  Za svaki okvir dobijemo sa druge strane potvrdu da je stigao, ako nije validan, ne dobijemo potvrdu. Ako ne stigne potvrda, radi se retransmisija. Primer je WiFi.
+  \item \textbf{Servis sa uspostavom veze i sa potvrdom prijema}\\
+  Uspostava veze omogućava da podaci teku istim redom kojim su i poslati. (primalac prima podatke u istom redosledu u kojem su i poslati). Retko se koristi.
+\end{enumerate}
+
+\subsection{Okruženje}
+Sloj veze je obično realizovan delom na mrežnoj kartici, a drugim delom na nivou operativnog sistema. 
+\begin{center}
+	\includegraphics[scale=0.3]{okruzenjeSV}
+\end{center}
+Komunikacija sloja veze sa ostalim slojevima:
+\begin{itemize}
+  \item prema mrežnom sloju\\
+  Sloj veze dobija od mrežnog sloja sledeći paket, ne može da zahteva neki određen paket i ne može da puta da se traži isti paket. Mora da se obezbede informacije ako se izgube, tj. informacije baferiše pošiljalac.\\
+  Kada šaljemo mrežnom sloju paket, samo jednom smemo da šaljemo jedan paket, ne može dva puta da se šalje ako smo pogrešili.
+  \item prema fizičkom sloju\\
+  Od fizičkog sloja zahtevamo samo jednom jedan okvir. Šaljemo fizičkom sloju samo jednom paket. 
+\end{itemize}
+
+Postoje i neki događaji i tajmeri definisani na sloju veze:
+\begin{itemize}
+  \item wait\textunderscore for\textunderscore event(\&event) - blokirajuća funkcija sve dok se ne dogodi neki event. Čeka na paket/okvir/istek tajmera.
+  \item start\textunderscore timer(seq\textunderscore nr) - pokreće tajmer
+  \item stop\textunderscore timer(seq\textunderscore nr) - prekida tajmer
+  \item start\textunderscore ack\textunderscore timer() - pokreće tajmer za okvir potvrde ACK
+  \item stop\textunderscore ack\textunderscore timer() - prekida tajmer za okvir potvrde ACK
+\end{itemize}
+
+Protokoli na sloju veze su u\textbf{topijski jednosmerni protokol, „stani i čekaj“ protokol za kanal bez grešaka, „stani i čekaj“ protokol za kanal sa greškama}.
+\subsection{Utopijski jednosmerni protokol}
+Ovaj protokol ne predviđa pojavu greške, pretpostavlja da su primalac i pošiljalac iste brzine i prenos podataka je jednosmeran.\\
+
+Pošiljalac u beskonačnoj petlji uzima od mrežnog sloja paket po paket i stvara okvir i prosleđuje to fizičkom sloju. Nema mogućnost istovremenog slanja podataka.\\
+Primalac u beskonačnoj petlji čeka na događaj. Kad mu stigne događaj (stigao novi okvir) blokirajuća komanda se odblokira. Pretpostavlja se da je okvir validan. Primalac tad iz fizičkog okvira učita okvir i prosledi dalje mrežnom sloju. 
+\begin{center}
+	\includegraphics[scale=0.5]{utopijski}
+\end{center}
+\section{Kontrola toka, ARQ, pauze (tajmauti), duplikati, protokol „stani i čekaj“ za savršen i nesavršen kanal}
+(preuzeto iz beleški sa vežbi)\\
+
+Šta ako pošiljalac i primalac nemaju iste brzine slanja, odnosno primanja? Potrebna je kontrola toka.
+Kontrola toka je sinhronizacija komunikacije između pošiljaoca i primaoca. Primalac ne sme da bude zatrpan od strane pošiljaoca.\\
+\begin{center}
+	\includegraphics[scale=0.5]{razlBrzine}
+\end{center}
+
+\subsection{Protokol „stani i čekaj“ za savršen kanal}
+Pretpostavljamo da je kanal savršen, tj. nema grešaka niti izgubljenih okvira i ovaj protokol garantuje usaglašenost u brzini komunikacije. \\
+Pošiljalac šalje okvir i čeka potvrdu da je primljen okvir sa druge strane. Ta potvrda znači da je primalac spreman dalje da prima podatke. Primalac kao potrvdu šalje prazan okvir - ack. Šalje se okvir po okvir, što je vrlo neefikasno.
+\begin{center}
+	\includegraphics[scale=0.5]{staniIcekaj1}
+\end{center}
+
+\subsection{ARQ - Automatic Repeat reQuest}
+Šta se dešava ako je nesavršen kanal? Može da se desi da okvir nije stigao na drugu stranu ili da je okvir stigao, ali nije validan i može da se desi da okvir stigne uspešno, ali da se potvrda izgubi. U tom slučaju se radi detekcija i retransmisija ARQ ili korekcija grešaka (obrađeno, više se tiče fizičkog sloja). 
+\\
+ARQ se obično koristi kada su greške uobičajene i kada se moraju ispraviti, npr. kod WiFi i TCP.\\
+Osnovna ideja je da primalac šalje potvrdu o prijemu ispravnog okvira ACK (to je takođe okvir), a pošiljalac uključuje tajmer čim pošalje okvir i automatski šalje ponovo okvir ako istekne vremenska pauza (timeout), osim ako u međuvremenu nije pristigao ACK.
+Na sledećoj slici je prikazan scenario sa gubitkom i retransmisijom.
+\begin{center}
+	\includegraphics[scale=0.5]{ARQ1}
+\end{center}
+Osnovni cilj je da okviri budu ispravni i da se ne dupliraju, a sekundarni cilj je da komunikacija bude efikasna.\\
+
+Postavljaju se dva ključna pitanja:
+\begin{enumerate}
+	\item \textbf{Kolika treba da bude pauza, tj. vreme za koje timeout ističe?}\\
+	Pauza ne treba da bude prevelika jer će primalac previše da čeka izgubljene pakete i doći će do neiskorišćenosti kanala. Ne treba da bude ni premala da se ne bi stalno radila retransmisija, odnosno, stalno prekidamo primaoca kada želi da pošalje potvrdu. Dužinu pauze je jednostavno odrediti za LAN (jasna je gornja granica, malo odstupanje), ali je teško za Internet (veliko odstupanje, nema jasne gornje granice).
+	\item \textbf{Kako da se izbegne interpretiranje dupliranih okvira kao novih?}\\
+	Situacija kada se ACK izgubi dovodi do toga da je moguće interpretirati dupliran okvir kao novi poslati okvir.
+\begin{center}
+	\includegraphics[scale=0.5]{ARQ2}
+\end{center}
+	Situacija kada je prekratka pauza može da dovede do iste situacije.
+\begin{center}
+	\includegraphics[scale=0.5]{ARQ3}
+\end{center}
+Iz ovoga izvlačimo da je neophodno da okviri i ACK-ovi nose sa sobom nekakvu oznaku da bi se izbegli duplikati. Dovoljno je da se razlikuje samo trenutni okvir od narednog okvira, što se može predstaviti jednim bitom.
+(radi se nekakvo invertovanje bitova, prvi put kad se šalje okvir bit je 0...??)
+\end{enumerate}
+\subsection{Protokol „stani i čekaj“ za nesavršen kanal}
+\begin{center}
+	\includegraphics[scale=0.5]{staniIcekaj2}
+	\includegraphics[scale=0.5]{staniIcekaj3}
+\end{center}
+Ograničenja ovog protokola: 
+\begin{itemize}
+  \item \textbf{neefikasan}\\
+  U datom momentu samo 1 paket prolazi kroz komunikacioni kanal. Prihvatljivo je za LAN, ali vrlo neefikasno za visok BDP. Primer: $B = 1 Mb/s$ $ D=50ms $. Proveriti koliko okvira u sekundi se prenese, i koliko okvira   u sekundi ako je $B = 10 Mb/s$.
+\end{itemize}
 \section{Protokol kliznih prozora u sloju veze, „1-bitni“, „vrati se N“, „selektivno ponavljanje“}
 
 \subsection{Protokol kliznih prozora u sloju veze}
