@@ -1021,9 +1021,122 @@ Zajedno sa tokenom, i podaci idu samo u jednom smeru. Ta\v{c}nije, ukoliko stani
 Kako su svi tro\v{s}kovi unapred predefinisani i onemogu\'{c}ena kolizija, dobijamo efikasniji rad pri visokim optere\'{c}enjima. Tako\dj{}e, garantovano je da \'{c}e u razumnom roku svi (unapred definisanom) svaki \v{c}vor dobiti priliku da po\v{s}alje svoj okvir. Me\dj{}utim, i u ovom protokolu postoje nedostaci. Pre svega, tu je veliki tro\v{s}ak pri malim optere\'{c}enjima. Tako\dj{}e, mo\v{z}e se desiti da se u komunikaciji izgubi token. Ovi protokoli se primenjuju eksperimentalno, kao mogu\'{c}nost pobolj\v{s}anja. Me\dj{}utim, protokoli sa slu\v{c}ajno\v{s}\'{c}u se uglavnom mnogo bolje pokazuju i te\v{s}ko nadma\v{s}uju.
 
 \section{MAC protokoli za bežične mreže}
+
+Be\v{z}i\v{c}na lokalna mre\v{z}a se obi\v{c}no konfiguri\v{s}e unutar poslovne zgrade, pri \v{c}emu se bazne stanice (pristupne ta\v{c}e) razme\v{s}taju na pogodna mesta. Ako se bazne stanice i prenosivi ra\v{c}unari tako podese da emisioni domet bude 3-4m, tada svaka prostorija u zgradi postaje zasebna \'{c}elija, a sama zgrada veliki vi\v{s}e\'{c}elijski sistem (sli\v{c}no kao klasi\v{c}ni sistem mobilne telefonije). Za razliku od telefonije, ovakva \'{c}elija sadr\v{z}i samo jedan kanal koji pokriva \v{c}itav propusni opseg i sve stanice koje se u njoj nalaze. Kada se prijemnik na\dj{}e u dometu dva aktivna predajnika, on prima izobli\v{c}en signal koji je neupotrebljiv.\\
+Prvo re\v{s}enje koje se name\'{c}e je upotreba CSMA protokola.
+
+\begin{center}
+\includegraphics[scale=0.5]{mac-bezicne}
+\end{center}
+
+Na prvoj slici, ukoliko emituje A stanica, stanica C nije svesna toga jer je van dometa i mo\v{z}e tako\dj{}e da krene da emituje. Na ovaj na\v{c}in, stanica B koja je u dometu obe stanice koje emituju, ne\'{c}e biti u mogu\'{c}nosti da primi na ispravan na\v{c}in ni jedan od ova dva signala. Kada stanica ne mo\v{z}e da utvrdi postojanje potencijalnog konkurenta zbog prevelike udaljenosti nastaje \textbf{problem skrivene stanice}. Odavde je o\v{c}igledno da CSMA ne bi bio prihvatljivo re\v{s}enje.
+
+Na drugoj slici, ukoliko stanica B \v{s}alje stanici A neki paket, stanica C koja \v{z}eli da komunicira sa stanicom D bi oslu\v{s}kivanjem zaklju\v{c}ila da je kanal zauzet i odustala bi od slanja, iako njeno slanje ne bi ugrozilo signal koji ide do stanice A. Ovaj problem se naziva \textbf{problem izlo\v{z}ene stanice}. Odavde zaklju\v{c}ujemo da CD ne bi dao prihvatljivo re\v{s}enje. Tako\dj{}e, kod \v{z}i\v{c}ane infrastrukture se mo\v{z}e uo\v{c}iti kolizija i tako prekinuti bespotrebno slanje, \v{c}ime se smanjuje cena. U be\v{z}ni\v{c}noj mre\v{z}i ure\dj{}aji ne mogu da emituju i primaju signal istovremeno, te ne mogu da detektuju koliziju.
+
+Kao re\v{s}enje se name\'{c}e protokol MACA (\textit{Multiple Access With Collision Avoidance} - vi\v{s}ekorisni\v{c}ki pristup sa izbegavanjem sukoba).
+
+\subsection{MACA}
+
+MACA koristi proceduru rukovanja (\textit{handshaking}) umesto CSMA.
+
+\begin{center}
+	\includegraphics[scale=0.5]{maca}
+\end{center}
+
+Procedura:
+\begin{enumerate}
+	\item Stanica A \v{s}alje zahtev za slanje (request to send - RTS) stanici B - kratak okvir koji sadr\v{z}i du\v{z}inu okvira sa podacima koji treba da budu poslati naknadno;
+	\item Stanica B odgovara dozvolom za slanje (clear to send - CTS) - okvir sadr\v{z}i du\v{z}inu okvira sa podacima (kopirano iz RTS);
+	\item Nakon \v{s}to dobije CTS, stanica A emituje okvir.
+\end{enumerate}
+
+Za to vreme, ostale stanice koje su dobile RTS znaju da su u dometu stanice koja \v{z}eli da emituje i tako\dj{}e oslu\v{s}kuju i o\v{c}ekuju CTS paket. Ukoliko CTS paket ne stigne do njih, to zna\v{c}i da ne ugro\v{z}ava prenos podataka. Ukoliko stanica primi CTS okvir (bez obzira da li je primila RTS ili ne) zaklju\v{c}uje da se u njenoj blizini nalazi stanica koja treba da primi okvir i primiruje se u toku trajanja prenosa (na osnovu informacija iz CTS).
+
+Na ovaj na\v{c}in je znatno smanjena mogu\'{c}nost pojave kolizije (ne i potpuno uklonjena!). Na primer, vi\v{s}e stanica mo\v{z}e poslati jednoj stanici RTS okvire koji \'{c}e se sukobiti i propasti. U takvoj situaciji, one stanice koje nisu dobile CTS okvir (nakon predvi\dj{}enog vremena), prove\v{s}\'{c}e proizvoljan period u mirovanju i nakon toga ponovo poslati RTS okvir. Za odre\dj{}ivanje ovog intervala se uglavnom koristi BEB.
+
 \section{Klasični Eternet}
+
+\begin{center}
+\includegraphics[scale=0.5]{vrsteKablova}
+\end{center}
+
+\subsection{10Base5}
+
+Popularno nazvan \textit{tick Ethernet}. Kabl podse\'{c}ao na \v{z}uto ba\v{s}tensko crevo sa oznakama na svakih 2,5m na mestima gde treba ubosti ra\v{c}ve. Veza sa kablom se ostvaruje pomo\'{c}u \textbf{ubodnih ra\v{c}vi} \v{c}ija se igla oprezno utisne u jezgro koaksijalnog kabla. Oznaka 10Base5 ozna\v{c}ava da sistem radi brzinom 10Mb/s, da koristi signaliziranje u osnovnom opsegu i da mo\v{z}e da podr\v{z}i segmente du\v{z}ine do 500m. \textbf{Primopredajnik} je ure\dj{}aj koji se pri\v{c}vr\v{s}\'{c}uje oko kabla tako da njegova ra\v{c}va ostvaruje pouzdan kontakt sa jezgrom kabla. Primopredajnik sadr\v{z}i elektronske komponente pomo\'{c}u kojih oslu\v{s}kuje kabl i otkriva sukobljavanje. Pri detektovanju sukobljavanja, emituje signal ostalim primopredajnicima da bi znali da je do\v{s}lo do sukobljavanja. Spojni kabl (kabl primopredajnika) povezuje primopredajnik sa interfejsom ra\v{c}unara. Mo\v{z}e biti do 50m du\v{z}ine i sadr\v{z}i pet zasebno oklopljenih upredenih parica. Dve parice za prijem i slanje podataka, dve za prijem i slanje signala, a poslednja (koja se ne koristi uvek) slu\v{z}i za napajanje primopredajnika. Neki primopredajnici mogu dopustiti da i do osam ra\v{c}unara bude vezano na njih, time se smanjuje broj potrebnih primopredajnika.
+
+\subsection{10Base2}
+
+Poznat pod nazivom \textit{thin Ethernet}. Umesto ubodnih ra\v{c}vi, koristili su se standardizovani BNC konektori koji formiraju T-spojeve. BNC konektori se lak\v{s}e koriste i pouzdaniji su, oni vr\v{s}e ulogu primopredajnika (svaki ra\v{c}unar mora imato svoj primopredajnik). Ovaj vid kabliranja bio je mnogo jeftiniji i jednostavniji za instalaciju, ali su segmenti kabla mogli da budu najvi\v{s}e 185m dugi i u svakom mo\v{z}e biti najvi\v{s}e 30 ra\v{c}unara.
+
+Kod oba prethodna tipa kabliranja postojao je problem nala\v{z}enja prekida, nesolidno ubodenih ra\v{c}vi i labavih konektora. Zbog toga su razvijane posebne tehnike za otkrivanje gre\v{s}aka. Kroz kabl se pu\v{s}ta impuls i oslu\v{s}kuje se odjek pri nailasku na prepreku ili kraj kabla. Na osnovu dobijenog impulsa se mo\v{z}e lokalizovati uzrok. Tehnika se naziva \textbf{reflektometrija vemenskog domena}.
+
+\subsection{10Base-T}
+
+Zbog te\v{s}ko\'{c}a u vezi sa nala\v{z}enjem mesta prekida u kablu, koristi se vrsta o\v{z}i\v{c}enja gde kablovi iz svih stanica vode u centralni razvodnik (\textbf{hub}), u kom se svi me\dj{}usobno povezuju. Ti kablovi su obi\v{c}no telefonske upredene parice, po\v{s}to obi\v{c}no takvi kablovi ve\'{c} postoje u poslovnim zgradama i ima ih u rezervi. Razvodnici ne baferuju dolazni saobra\'{c}aj. U ovoj konfiguraciji stanice se lak\v{s}e dodaju i uklanjaju, a prekid kabla se lako otkriva. Najve\'{c}a du\v{z}ina kabla mo\v{z}e biti 100m (najvi\v{s}e 200m ukoliko se koriste kvalitetnije parice kategorije 5).
+
+\subsection{10Base-F}
+
+Zasnovan na opti\v{c}kim kablovima. Varijanta je skupa zbog visoke cene konektora i zavr\v{s}nih elemenata, ali je izuzetno imuna na smetnje i preporu\v{c}ljiva je za povezivanje zgrada ili me\dj{}usobno vrlo udaljenih razvodnika. Segment kabla se mo\v{z}e pru\v{z}ati i \v{c}itav kilometar. Sistem je u informacionom smislu bezbedniji, jer je mnogo te\v{z}e prislu\v{s}kivati opti\v{c}ki kabl. 
+
+\subsection{Topologije}
+
+Da bi se ostvarile ve\'{c}e mre\v{z}e, mogu se koristiti \textbf{repetitori} za nadovezivanje segmenta kablova. Repetitor je ure\dj{}aj fizi\v{c}kog sloja koji prima, poja\v{c}ava i ponovo \v{s}alje signal.
+
+\begin{center}
+\includegraphics[scale=0.5]{ethernet-topologije}
+\end{center}
+
+\begin{itemize}
+	\item Linearna topologija - jedan kabl se provla\v{c}i kroz sve prostorije i sve stanice se priklju\v{c}uju u ta\v{c}kama ra\v{c}vanja
+	\item Topologija sa okosnicom - od krova do suterena prolazi vertikalni vod od kog se preko specijalnih repetitora granaju horizontalni kablovi (obi\v{c}no vertikalni vod debeo, a horizontalni tanji)
+	\item Topologija stabla - naj\v{c}e\v{s}\'{c}e se primenjuje
+	\item Segmentirana topologija - najve\'{c}a udaljenost izme\dj{}u dva primopredajnika ne sme biti ve\'{c}a od 2,5km. Izme\dj{}u dva primopredajnika sme biti najvi\v{s}e \v{c}etiri repetitora, predstavlja niz kablovskih segmenata
+\end{itemize}
+
+\subsection{MAC protokol podsloja za Eternet}
+
+\begin{center}
+\includegraphics[scale=0.5]{format-okvira}
+\end{center}
+
+\begin{itemize}
+	\item Preambula - 8 bajtova, od kojih svaki sadr\v{z}i sekvencu 10101010 (osim kod poslednjeg bajta, u njemu su poslednja dva bita 11, i on predstavlja oznaku po\v{c}etka okvira - \textit{Start of Frame}). Slu\v{z}i za sinhronizaciju primaoca sa po\v{s}iljaocem.
+	\item Adrese odredi\v{s}ta i izvori\v{s}ta - najzna\v{c}ajniji bit prve adrese mo\v{z}e biti
+	\begin{itemize}
+		\item 0 - obi\v{c}ne adrese
+		\item 1 - grupne adrese
+	\end{itemize}
+	\item Tip - saop\v{s}tava primaocu \v{s}ta da radi sa okvirom, odnosno, kom protokolu mre\v{z}nog sloja treba proslediti okvir
+	\item Podaci - polje du\v{z}ine do 1500 bajtova, u Ethernet protokolu okvir mora biti najmanje 64 bajta zbog eventualnog naglog prekida i potencijalnih sukoba, te ako je ovo polje manje od 46 bajtova, dopunjuje se u polju Dopuna.
+	\item Kontrolni zbir - 32-bitni klju\v{c} za he\v{s}iranje podataka, CRC
+\end{itemize}
+
 \section{Moderni (komutirani) Eternet}
+
+Sa pove\'{c}anjem broja stanica, saobra\'{c}aj postaje sve gu\v{s}\'{c}i. Da bi se prevazi\v{s}lo zasi\'{c}enje mre\v{z}e mo\v{z}e se pove\'{c}ati brzina prenosa (sa 10Mb/s na 100Mb/s). Me\dj{}utim, kada uzmemo u obzir tempo razvoja, lako se mogu zasititi i gigabitne mre\v{z}e. Drugi na\v{c}in je kori\v{s}\'{c}enje komutiranog Etherneta. Jezgro takvog ure\dj{}aja je \textbf{skretnica} (\textit{switch}) koja na brzoj osnovnoj plo\v{c}i naj\v{c}e\v{s}\'{c}e ima mesta za 4 do 32 linijske kartice, od kojih svaka sadr\v{z}i jedan do osam konektora. Svaki konektor povezuje jedan umre\v{z}eni ra\v{c}unar preko upredene parice i spoja 10Base-T. Kod razvodnika (\textbf{hub}) smo imali situaciju da se ulaz ponavlja na svim izlazima.
+
+\begin{center}
+\includegraphics[scale=0.5]{hub-switch}
+\end{center}
+
+Kako switch radi na sloju veze, on koristi adrese iz okvira i na taj na\v{c}in prosle\dj{}uje okvir na odgovaraju\'{c}i izlaz, bez znanja ostalih izlaza o postojanju okvira. Svaki izlaz switch-a je odvojen kolizioni domen, za razliku od hub-a, kod kog se kolizioni domeni ne dele. Zbog podele kolizionih domena, vi\v{s}e ne mo\v{z}e do\'{c}i do kolizije i CSMA/CD nije potreban. Me\dj{}utim, kako vi\v{s}e stanica mo\v{z}e poslati istovremeno okvir na isti izlaz, neophodno je da u switch-u postoji bafer u koji \'{c}e se sme\v{s}tati okvir dok se ne rastereti saobra\'{c}aj.
+
+Uvo\dj{}enjem switch-eva i hub-ova je zamenjen koncept deljenih kablova koji je bio aktivan ranije. Sa ovim pristupom je znatno jednostavnije dodati novi ure\dj{}aj, a dobija se i na pouzdanosti (lak\v{s}e se nalazi kvar). Switch omogu\'{c}ava pove\'{c}an protok, odnosno svaka linija ima pun kapacitet. Tako\dj{}e, topologija mre\v{z}e po\v{c}ela da li\v{c}i na zvezdu.
+
+Neophodno je da switch na ispravan izlaz prosledi dobijen okvir. Metod koji se primenjuje naziva se u\v{s}enje unazad. Pravi se tabela relacija broja porta (izlaza) i adrese koja se nalazi na tom portu. Tabelu popunjavamo posmatranjem portova i adresa stanica koje \v{s}alju okvire. Kada se prosle\dj{}uje okvir, ukoliko postoji unos u tabeli \v{s}alje se okvir samo na taj port, u suprotnom se okvir prosle\dj{}uje na sve portove.
+
+U mre\v{z}i se mogu vi\v{s}estruko upotrebljavati switch-evi i hub-ovi, sve dok se ne pojavljuju petlje. U slu\v{c}aju ovakvih mre\v{z}a, nekim portovima \'{c}e biti dodeljeno vi\v{s}e adresa.
+
+\begin{center}
+\includegraphics[scale=0.3]{visestruki-hub-switch}
+\end{center}
+
+Ukoliko se u mre\v{z}i javljaju petlje (\v{c}esto se namerno projektuju da imaju redundantnost), potrebno je petlje otkloniti kako bi dobili funkcionalnu mre\v{z}u. To se posti\v{z}e formiranjem razapinju\'{c}eg stabla (u dubinu ili u \v{s}irinu).
+
 \section{Mrežni sloj, uloga, motivacija, rutiranje i prosleđivanje (ukratko), tipovi servisa na mrežnom sloju, objašnjenja i njihov uporedni odnos}
+
+
+
 \section{IP adrese i prefiksi}
 Internet se u mreznom sloju moze posmatrati kao skup medjusobno povezanih podmreza ili autonomnih sistema. Kombinovana mreza nema odredjenu strukturu , osim veceg broja velikih okosnica koje se sastoje od linija velike propusne moci I brzih usmerivaca. Na okosnice su prikljucene regionalne mreze ,a za njih se vezuju lokalne mreze univerziteta, kompanija I davalaca Internet uluga.\\
 
