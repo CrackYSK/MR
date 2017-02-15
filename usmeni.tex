@@ -1135,7 +1135,49 @@ Ukoliko se u mre\v{z}i javljaju petlje (\v{c}esto se namerno projektuju da imaju
 
 \section{Mrežni sloj, uloga, motivacija, rutiranje i prosleđivanje (ukratko), tipovi servisa na mrežnom sloju, objašnjenja i njihov uporedni odnos}
 
+\subsection{Mre\v{z}ni sloj, uloga, motivacija, rutiranje i prosle\dj{}ivanje}
 
+Sa slojem veze mi smo ve\'{c} dobili funkcionalnu mre\v{z}u. Problem sa pristupom sloja veze je \v{s}to bi u tom slu\v{c}aju bilo neophodno pamtiti ogromnu tabelu relacija i \v{s}to bi se inicijalna poruka slala celom svetu. Zbog prirode switch ure\dj{}aja je nemogu\'{c}e da se koriste razli\v{c}ite tehnologije u razli\v{c}itim delovima mre\v{z}e. Jo\v{s} jedan nedostatak je na\v{s}a potreba da imamo kontrolu mre\v{z}nog saobra\'{c}aja, odnosno da odre\dj{}ujemo rute (putanje) kojim \'{c}e paket stizati od jedne do druge ta\v{c}ke.
+
+Zadatak mre\v{z}nog sloja je da pakete od izvori\v{s}ta sprovede celim putem do odredi\v{s}ta, \v{s}to zna\v{c}i da treba da ih provu\v{c}e kroz brojne usputne usmeriva\v{c}e (rutere). \textbf{Rutiranje} je proces odlu\v{c}ivanja u kom pravcu treba poslati saobra\'{c}aj. Da bi ostvario ovaj zadatak, mre\v{z}ni sloj mora da poznaje topologiju komunikacione podmre\v{z}e i da kroz njih bira odgovaraju\'{c}e putanje. Njegov zadatak je i da vodi ra\v{c}una da se neke linije i ruteri ne preopterete (algoritmi nad grafovima). \textbf{Prosle\dj{}ivanje} je proces slanja paketa na osnovu lokalne tabele, pretpostavlja se da je pre prosle\dj{}ivanja obavljeno rutiranje.
+
+\subsection{Tipovi servisa na mre\v{z}nom sloju}
+
+Postoje dva tipa mre\v{z}nih servisa:
+\begin{itemize}
+	\item Datagram - servisi bez uspostavljanja veze (poput po\v{s}te)
+	\item Virtuelna kola - servisi sa uspostavljanjem veze (poput fiksne telefonije)
+\end{itemize}
+
+Oba tipa se realizuju tehnikom sa\v{c}uvaj-i-prosledi (\textit{store-and-forward}. Ova tehnika je vrlo jednostavna, nakon \v{s}to ruter dobije paket, privremeno ga \v{c}uva (baferi\v{s}e), sve dok ne bude u mogu\'{c}nosti da ga prosledi dalje. Koristi se tehnika statisti\v{c}kog multipleksiranja za upravljanje protokom.
+
+Kod datagramskih servisa, paket sadr\v{z}i ciljnu adresu na osnovu koje ruter prosle\dj{}uje paket dalje
+
+\begin{center}
+\includegraphics[scale=0.5]{datagramski-servis}
+\end{center}
+
+Svaki ruter sadr\v{z}i tabelu prosle\dj{}ivanja (\textit{forwarding table}), u kojoj za svaku adresu postoji susedni \v{c}vor na koji se paket namenjen toj adresi prosle\dj{}uje (slede\'{c}i hop). Ova tabela se tokom vremena mo\v{z}e menjati, u zavisnosti od algoritma za usmeravanje koji se primenjuje. Za ozna\v{c}avanje stanica se koristi IP adresa (32-bitna identifikacija), u okviru IPv4 paketa \v{c}ija je maksimalna veli\v{c}ina oko 1,5KB, sadr\v{z}i (osim adrese) i verziju, zaglavlje, du\v{z}inu paketa, kontrolni zbir...
+
+Kako se ne bi za svaki paket izmi\v{s}ljala nova putanja koriste se virtuelna kola. Na ovaj na\v{c}in, jednom uspostavljena putanja od izvori\v{s}ta do odredi\v{s}ta se ne menja i postaje parametar koji se unosi u tabelu. Kada se veza raskine, raskine se i odgovaraju\'{c}e virtuelno kolo. Svaki paket sa sobom nosi identifikator virtuelnog kola kom pripada.
+
+\begin{center}
+\includegraphics[scale=0.5]{virtuelno-kolo}
+\end{center}
+
+Identifikator virtuelnog kola nema globalno zna\v{c}enje, poput IP adrese, ve\'{c} se koristi samo na nekom delu sloja veze.
+
+Oba pristupa imaju svoje prednosti i mane, u skladu sa slede\'{c}om tabelom:
+
+\begin{center}
+\includegraphics[scale=0.5]{datagrami-vk}
+\end{center}
+
+Kada \v{z}elimo da pove\v{z}emo datagramske servise i virtuelna kola, neophodno je preslikavanje izme\dj{}u IP adresa i identifikatora virtuelnog kola. Provajderi \v{c}esto koriste virtuelna kola kako bi grupisali IP saobra\'{c}aj i br\v{z}e ga preneli.
+
+\begin{center}
+\includegraphics[scale=0.3]{datagrami-vk-kombinacija}
+\end{center}
 
 \section{IP adrese i prefiksi}
 Internet se u mreznom sloju moze posmatrati kao skup medjusobno povezanih podmreza ili autonomnih sistema. Kombinovana mreza nema odredjenu strukturu , osim veceg broja velikih okosnica koje se sastoje od linija velike propusne moci I brzih usmerivaca. Na okosnice su prikljucene regionalne mreze ,a za njih se vezuju lokalne mreze univerziteta, kompanija I davalaca Internet uluga.\\
