@@ -1514,15 +1514,260 @@ Sa predavanja:
 Prilikom pamćenja dovoljno je zapamtiti izvor i redni broj. Prva ideja je da pamtim sve redne brojeve i čuvam u listu. Prolazim kroz listu i proveravam da li sam već dobio taj paket, međutim, to zahteva bafer proizvoljne veličine, a to se ne isplati. Alternativa je da pamtim izvor i redni broj poruke, a sledeću poruku pamtim samo ako ima veći redni broj (tu poruku sigurno nisam dobio). Redni broj povećavam samo ako sam siguran da sam dobio sve prethodne poruke, tj. povećavam ga samo ako je redni broj paketa koji je pristigao za jedan viši. Stigne poruka sa brojem 1, pamtim, pa sa brojem 3, pamtim i ne povecavam, pa sa brojem 2, pamtim i povećavam, pa opet sa 3, pa povećavam. Postoji mehanizam da se sazna da li su dobijene sve poruke. 
 
 \section{Rutiranje zasnovano na stanju veza}
+(preuzeto iz beleški sa predavanja)\\
+
+Rutiranje zasnovano na stanju ili \textit{LS rutiranje} (Link state routing).\\
+Drugačije je od DV rutiranja i koristi neke prethodno uvedene koncepte: algoritam rutiranja koji može da bude Dijkstrin algoritam i plavljenje.\\
+Sastoji se od dve faze:
+\begin{enumerate}
+  \item čvorovi \textbf{plave} mrežu informacijama o svojoj lokalnoj topologiji (susedima), odnosno LS paketom (link state packet) koji sadrži informacije o udaljenosti do lokalnih čvorova. Tako je svaki čvor u stanju da rekonstruiše celokupnu topologiju.
+\begin{center}
+	\includegraphics[scale=0.3]{LSP}
+\end{center}
+  \item Svaki čvor računa svoju tabelu prosleđivanja i ovo se postiže npr. Dijkstrinim algoritmom. Deluje da ima suvišnog izračunavanja ako se gleda cela mreža. Tabela prosleđivanja jednog čvora izgleda ovako:
+\begin{center}
+	\includegraphics[scale=0.4]{LSP2}
+\end{center}
+\end{enumerate}
+
+\subsection{Promene u mreži}
+Promene se javljaju kada npr. čvor otkaže ili se doda neki čvor. Kada neki čvor detektuje lokalnu promenu (kaže npr. ne vidim više susedni čvor), on širi na mrežu svoj popravljeni LS paket. Ruteri, tj. čvorovi koji su susedi čvoru koji je detektovao promenu računaju novo rešenje, tj. najbliže puteve i emituju svoje LS pakete, pa isto to rade njihovi susedi.
+Ako su susedi od G otkrili promenu, to izgleda ovako:
+\begin{center}
+	\includegraphics[scale=0.4]{LSP3}
+\end{center}
+Postoji razlika kada čvor otkaže i kada otkaže veza. U drugom slučaju čvorovi na krajevima pokvarene veze vrše plavljenje sa ažuriranim LSP, a u prvom slučaju svi susedi primete da veza ne radi, ali ne znaju da li je u pitanju otkaz veze ili otkaz čvora (što nije ni bitno jer rade isto u oba slučaja). Pokvareni čvor ne može da ažurira sopstveni LSP, ali to nije ni bitno jer on svakako ne radi.\\
+Kada se doda neki čvor ili veza, susedni čvorovi će detektovati i ažurirati svoje LSP. Nakon plavljenja, ubrzo će svi znati novu topologiju.\\
+\subsection{DV-LS poređenje}
+\begin{itemize}
+  \item Konvergencija\\
+  Ključna kod LS, to je njegova prednost, a brza je zbog plavljenja. Spora je kod DV, najbolji putevi na daljini k tek u k-toj razmeni.
+  \item Skalabilnost\\
+  DV ima odličnu skalabilnost jer čvorovi računaju rešenje potproblema. Kod LS je malo lošija (ali korektna) jer svaki čvor računa rešenje celog problema. Može se nadomestiti boljom opremom.
+\end{itemize}
 \section{Višeciljno rutiranje sa najkraćim putevima (ECMP)}
+(preuzeto iz beleški sa predavanja)\\
+
+Dozvoljavamo višestruke puteve, odnosno više nemamo drvo koje formiraju najkraći putevi od zadatog čvora, nego usmereni aciklički graf - DAG (nemamo cikluse, paketi se ne vrte u krug). Odgovara nam da imamo alternativne putanje za neke čvorove. Redudantnost poboljšava pouzdanost, a i višestruki putevi pomažu kod smanjenja zagušenja. 
+\begin{center}
+	\includegraphics[scale=0.5]{viseciljno}
+\end{center}
+U praksi se koristi \textbf{ECMP rutiranje} (Equal-cost multipath routing). Zadržavamo sve najbolje puteve, a ne samo jedan. Koristi se Dijkstrin algoritam i samo ubacujemo sve najbolje puteve.
+\begin{center}
+	\includegraphics[scale=0.5]{viseciljno2}
+\end{center}
+Sada, kada je napravljena tabela prosleđivanja, kako odabrati kojom putanjom će se vršiti prosleđivanje?\\
+Možemo to uraditi \textit{nasumičnim} odabirom jedne od putanja što balansira opterećenje, ali paketi mogu imati različito kašnjenje, što je loše za prenos u realnom vremenu. Ako je došlo do zagušenja na nekom putu, šaljemo drugom putanjom. Biće sve isporučeno ako se nasumično šalju paketi, ali biće smetnji kod korisnika jer paketi ne stižu po pravom redosledu (nisam sigurna za ovo). Zato biramo nasumično, ne po paketu, nego po adresi, tako se obezbeđuje da paketi sa iste IP adrese idu istim putem i nema smetnji. To je \textit{kontolisano nasumično} biranje na osnovu izvora i cilja. Opterećenje se i dalje balansira na taj način i eleminiše se upotreba različitih putanja za pakete iz istih logičkih celina, npr. datoteka, videa, itd.
 \section{Hijerarhijsko rutiranje}
+Kako raste mreža, tako rastu i tabele u čvorovima. Mreža u određenom trenutku može toliko narasti da neće svaki čvor moći da vodi evidenciju o svim drugim čvorovima, pa se usmeravanje mora organizovati hijerarhijski, kao u telefonskoj mreži.\\
+
+Rutiranje nije po svakom pojedinačnom čvoru (jer je loše skaliranje), nego čvorove grupišemo u regione, npr. region neke države, i svaki region posmatramo kao poseban čvor. Zatim, unutar regiona vršimo specifičnije rutiranje. Svaki čvor tada zna sve o usmeravanju u njegovoj oblasti, ali ništa o internoj strukturi drugih oblasti.\\
+ Nema smisla praviti unos u tabeli prosleđivanja za svaki ruter na Internetu u  svetu.\\
+Mogu postojati i podregioni unutar regiona, a i za njih primenjujemo isti pristup, npr. ISP mreža. Konačna putanja se dobija tako što najpre rutiramo paket u najmanjem regionu, npr. u okviru ISP mreže, potom, po izlasku iz ISP mreže, koristi se rutiranje na nivou države, potom se ponovo ulazi u npr. ciljnu ISP mrežu, itd.\\
+Ne daje uvek najkraću putanju, ali je to kompromis zarad efikasnosti. Primer koji to pokazuje:
+\begin{center}
+	\includegraphics[scale=0.4]{hijerRutiranje}
+\end{center}
+Rutiranje po regionima je i dalje teško za izračunavanje. Uvodimo dodatni podnivo u vidu IP prefiksa - podela na podmreže i njihovo kasnije sažimanje.
+\begin{center}
+	\includegraphics[scale=0.4]{hijerRutiranje2}
+\end{center} 
+Podmreže: interna podela IP prefiksa npr. unutar kompanije.
+\begin{center}
+	\includegraphics[scale=0.4]{hijerRutiranje3}
+\end{center}
+Moguće je i spoljno sažimanje nepovezanih ustanova. Ovo obično rade ISP.
+\begin{center}
+	\includegraphics[scale=0.4]{hijerRutiranje4}
+\end{center}
 \section{Transportni sloj, uloga, tipovi servisa i njihovo poređenje}
+(iz beleški sa predavanja)\\
+
+Sloj koji se nalazi između mrežnog i aplikativnog sloja. Predstavlja nadogradnju nad mrežnim slojem koja omogućava prenos podataka sa željenim stepenom pouzdanosti i kvaliteta. Brine se o tome da komunikacija između dva krajnja korisnika funkcioniše. Posmatra se kao da su dva računara povezana direktnom vezom, nemamo percepciju kako se podaci šalju ili stižu. Treba da prosledi informacije aplikativnom sloju, ali da se podaci prosleđuju u uređenom redosledu. \\
+Jedinica informacije u transportnom sloju se zove \textbf{segment}. Segment se ugrađuje u pakete, a ovi dalje u okvire.
+\begin{center}
+	\includegraphics[scale=0.4]{trans1}
+\end{center}
+Transportni sloj omogućava da usluga prenosa bude pouzdanija od usluge mrežnog sloja na koju se oslanja. Može da evidentira izgubljene ili oštećene pakete i da ih šalje ponovo.
+\subsection{Servisi u transportnom sloju}
+Dva osnovna tipa su podržana.
+\begin{enumerate}
+	\item datagramski tip transporta - UDP\\
+	Svodi se na datagramski servis iz mrežnog sloja. Nije pouzdan jer mogu da se izgube poruke, da se pomešaju ili dupliraju. Informacije se šalju u impulsima, ograničene su dužine poruka. Poruke se šalju bez obzira na stanje primaoca i bez obzira na stanje mreže.
+	\item TCP servisi\\
+	Ozbiljno razrađen mehanizam. Nema veze sa virtuelnim kolom. Fiksira se putanja po kojoj ide paket ostvarivanjem veze. Razrešava probleme i tek kad dobije pouzdane podatke, on i šalje. Ne gleda fizičku vezu, samo logičku (i jedna i druga strana su svesne komunikacije). Proizvoljna dužina toka. Kontrola toka se prilagođava pošiljaocu i primaocu (vodi se računa o tome da li primalac može da primi poruku). Kontrola toka zagušenja se prilagođava stanju veze (ako je veza zagušena, TCP protokol prilagođava slanje). Zaklanja nesavršenosti usluge mrežnog sloja, tako da korisnički procesi mogu da računaju na tok bitova bez ijedne greške.
+\end{enumerate}
+
 \section{Socket API, primer jednostavnog klijent-servera (pseudokod), portovi}
+Socket API je abstrakcija za upotrebu mrežnih usluga. Definiše mogućnosti transportnog sloja. Svi operativni sistemi imaju ove funkcionalnosti. Često se umesto Socket API kaže mrežni API. Podržava i tokove i datagrame.\\
+
+\textbf{Soketi} omogućavaju procesima da se povezuju na lokalnu mrežu putem raziličitih portova i omogućavaju komunikaciju  programa, a svaki program ima svoj \textbf{port} (16-bitni celi brojevi) jer nije dovoljna IP adresa jer jedan računar ima više programa (procesa). Isti API se koristi i za tokove i za datagrame:
+\begin{center}
+	\includegraphics[scale=0.5]{soketi}
+\end{center}
+Prve četiri operacije izvršavaju serveri navedenim redom. Operacija SOCKET pravi novi soket (utičnicu) i za nju u transportnoj jednici dodeljuje prostor u tabeli. Parametrima poziva zadaju se format adrese, vrsta usluge (npr. pouzdan tok bitova) i protokol. Uspešno izvedena operacija SOCKET vraća običan deskriptor za datoteke za upotrebu pri sledećim pozivima, koji se koristi na isti način kao pri pozivanju procedure OPEN.\\
+Nove utičnice nemaju mrežne adrese. One im se dodeljuju izvršavanjem usluge BIND. Kada servet utičnici pridruži adresu , na nju se tada mogu priključivati udaljeni klijenti.\\
+ Zatim se poziva operacija LISTEN koja za dolazne pozive dodeljuje prostor u redu čekanja za slučaj da istovremeno više klijenata pokušava da se poveže. \\
+Da bi se blokirao dok ne stigne neki poziv, server pozica operaciju ACCEPT.  Kada stigne zahtev za povezivanje, pravi se nova utičnica koja ima svojstva kao prethodna, i vraća se njen deskriptor. Server tada može ostaviti jednu granu procesa ili programske niti da obrađuje novu utičnicu, a sam se vratiti na staru i nastaviti da čeka nove pozive. Operacija ACCEPT vraća standardan deskriptor datoteke koji se može koristiti pri čitanju i upisivanju, kao kod normalnih datoteka.\\
+
+Šta se dešava kod klijenta?\\
+I tu se najpre mora napraviti utičnica pozivanjem operacije SOCKET, ali operacija BIND nije potrebna jer dodeljena adresa serveru ništa ne znači. Operacija CONNECT blokira pozivaoca i aktivno započinje proces povezivanja. Kada se proces završi, klijentski server se deblokira i veza je uspostavljena. Obe strane sada mogu pomoću usluga SEND i RECEIVE šalju i primaju podatke potpunom dupleksnom vezom. Veza između utičnica raskida se simetrično, kada obe strane izvrše operaciju CLOSE.
+\\
+
+Procesi se identifikuju uređenom trojkom (IP adesa, protokol, port).
+Računari koji su opštepoznati - serveri vezuju se za opšte-poznate portove koji imaju vrednosti manje od 1024. Klijenti koriste nasumične portove sa vrednostima većim od 1024 koje bira operativni sistem. Ti portovi se koriste privremeno. Neki opšte-poznati portovi su:
+\begin{center}
+	\includegraphics[scale=0.5]{portovi}
+\end{center}
+Primer koda: (iz knjige, strana 468. i 469.)
+\begin{center}
+	\includegraphics[scale=0.5]{program}
+	\includegraphics[scale=0.5]{program2}
+\end{center}
 \section{UDP}
+UDP - User Datagram Protocol. Jednostavan protokol. Koriste ga programi kojima nije bitna pouzdanost ili se baziraju na porukama. UDP je u osnovi isto što i IP uz dodato kratko zaglavlje.  Radi bez predstavljanja direktne veze. \\
+
+UDP prenosi segmente koji se sastoje od osmobajtnog zaglavlja i korisničkih podataka. Po jedan \textbf{priključak }(port) na izvorišnom i na odredišnom računaru identifikuju dva kraja „veze“. Kada stigne UDP paket, njegov koristan teret se predaje procesu koji je pridružen priključku. Pridruživanje se vrši operacijom BIND. Glavna prednost u odnosu na IP protokol leži u tome što on paketima dodaje \textit{izvorišni i odredišni priključak}. Bez tih polja u zaglavlju, transp. sloj ne bi znao šta da radi sa paketima. 
+\begin{center}
+	\includegraphics[scale=0.7]{udp}
+\end{center}
+Izvorišni priključak u zaglavlju je potreban kada treba poslati odgovor pošiljaocu. Kopirajući izvorišni priključak iz dolaznog segmenta u odredišni priključak odgovora, proces koji šalje odgovor može lako da naznači proces koji koji na drugom kraju treba da ga dobije.\\
+Dužina UDP paketa obuhvata osmobajtno zaglavlje i podatke. Kontrolni zbir (16 bita) UDP paketa nije obavezan i prikazuje se nulom kada nije izračunavan, a kad je kontrolni zbir stvarno nula, to se prikazuje samim jedinicama. 
+\\
+
+UDP protokol ne upravlja tokom, ne kontroliše greške i ne šalje ponovo pogrešno primljene segmente. Sve to prepušta korisničkim procesima. On predstavlja interfejs ka IP protokolu i dodatno demultipleksira procese koji istovremeno koriste isti priključak. \\\\
+
+Obe strane prave sokete, dve strane znaju međusobno koje su IP adrese pa mogu da počnu da komuniciraju:
+\begin{center}
+	\includegraphics[scale=0.5]{udp2}
+\end{center}
+
+Koristi UDP bafere koji zadržavaju pakete koji stižu za različite portove:
+\begin{center}
+	\includegraphics[scale=0.5]{udp3}
+\end{center}
 \section{Uspostava i prekid veze na transportnom sloju (uopšteno)}
+(preuzeto iz beleški sa predavanja)\\
+
+Uspostava veze je prva stvar koja predstavlja problem. Krajnji čvorovi moraju biti svesni uspostave veze pre bilo kakvog slanja ili primanja podataka. Oni se dogovaraju oko skupa parametara i treba da usaglase početne brojeve segmenata zbog daljeg impl. protokola kliznih prozora (koriste se između krajnjih tačaka, dok su se kod sloja veze koristili između susednih). Podešavaju se stanja krajnjih čvorova prilikom uspostave veze.\\
+
+\textbf{Uspostava komunikacije} se sastoji iz tri faze:
+\begin{enumerate}
+  \item Klijent šalje segment SYN(x)\\
+  Šalje se redni broj koji predstavlja početni broj segmenta koji on šalje (svaki naredni segment se šalje sa brojem koji je inkrementiran). SYN segmenti se ponovo šalju ako se izgube.
+  \item Server odgovara \\
+  Pasivna strana, server, odgovara tako što vrati potvrdu da je video broj - vraća broj x ili x+1 i šalje redni broj svog paketa (svoj brojač) sa kojim server počinje da broji.
+  \item Klijent potvrđuje broj ACK(y+1) \\
+  Klijent šalje potvrdu da je video serverov broj i šalje mu svoj broj sekvence.
+\end{enumerate}
+\begin{center}
+	\includegraphics[scale=0.5]{veza}
+\end{center}
+Zamislimo situaciju u kojoj stižu zakasneli paketi. Onda stižu i zakasneli duplikati od strane klijenta.
+\begin{center}
+	\includegraphics[scale=0.5]{veza2}
+\end{center}
+U nekom momentu, server dobija broj x i šalje odgovor klijentu koji je u međuvremenu poslao drugi zahtev. Klijent će videti od servera x+1, ali prepoznaje da to nije redni broj koji je on poslao jer je on u međuvremenu poslao drugi zahtev jer nije dobio odgovor od servera i pomislio je da se paket izgubio, ali taj paket u nekom trenutku serveru stiže i on šalje odgovor na njega.  Klijent samo odbije taj paket. Redni broj se bira na slučajan način.
+\begin{center}
+	\includegraphics[scale=0.5]{veza3}
+\end{center}
+\textbf{Prekidanje komunikacije}:\\
+Nije trivijalno, nerešiv je problem. Obe strane treeba da prekinu vezu. Stanje veze na obe strane treba da bude poništeno. Ne sme da se desi da jedna strana zatvori, a druga da to ne uradi. Jedna strana je uvek inicijator prekida, tj. aktivna je, a druga je pasivna. Ne mora klijent da bude aktivna strana, može i sever da zahteva prekid.\\
+Analogija sa problemom dve vojske:\\
+\begin{center}
+	\includegraphics[scale=0.7]{veze4}
+\end{center}
+Dve plave vojske treba da se dogovore da napadnu crvenu vojsku. U zbiru ih ima više nego crvenih, ali ako napadnu posebno, onda će sigurno da izgube. Treba da se dogovore kad da napadnu i jedna plava armija šalje poruku po kuriru npr. napadamo sutra i taj kurir treba da se vrati i da kaže da je preneo poruku. Međutim, kada se kurir vrati, ova druga vojska ne zna da li je kurir stigao na drugu stranu i tako beskonačno..\\
+
+Slično, kada šaljem signal o prekidu veze, očekujem da stigne potvrda. Druga strana očekuje potvrdu da je stigla potvrda. \\
+U praksi se rešava tako što se vrši usaglašavanje na jednom nivou, odnosno čeka se samo jedna potvrda. (i jedna i druga strana šalju po kurira i čekaju kurira da se vrati i time se završava. Ako se kurir ne vrati, šalju opet.) Ne garantuje se da će obe strane u isto vreme da zatvore vezu. Obe strane čekaju još dve dužine timeouta (maksimalno vreme za retransmisiju) pre nego što zatvore vezu.\\
+Tok zatvaranje veze se satoji iz dva koraka:
+\begin{enumerate}
+	\item aktivni šalje FIN(x), pasivni potvrđuje sa ACK(x+1)
+	\item pasivni šalje FIN(z), aktivni potvrđuje sa ACK(y+1)
+	\item FIN se ponovo šalju ako se izgube
+\end{enumerate}
+\begin{center}
+	\includegraphics[scale=0.5]{veza5}
+\end{center}
 \section{Protokoli kliznih prozora na transportnom sloju}
+(preuzeto iz beleški sa predavanja)\\
+
+Zašto ponovo radimo ove protokole? U sloju veze ovi protokoli su se odnosili na prenos podataka kroz kabl između dva susedna čvora. Ovde omogućavaju prenost između krajnjih tačaka, bilo gde na Internetu.\\
+ Povećana pouzdanost na nižim nivoima doprinosi efikasnosti na višim nivoima, ali nije nužno imati te mehanizme na nižim nivoima. U ekstremnom slučaju, moglo bi sve da se radi na trasnportnom sloju: kontrola toka, provera grešaka. Ovo bi bilo manje efikasno. Razmisliti zašto.\\
+ 
+ Postoje više vrsti ovakvih protokola u zavisnosti od baferisanja, potvrđivanja poruka i retransmisije. Mi smo videli dve vrste: \textbf{vrati se N} (jednostavno, ali može biti neefikasno)i \textbf{selektivno ponavljanje}(složenije, ali efikasnije). Zajedničko za oba je da od aplikativnog sloja uzimamo jedan po jedan podatak i to po redu. To zahteva aplikativni sloj. I apl. sloju treba da se šalju podaci po redu.
+ \subsection{Pošiljalac}
+ Baferiše najviše W (veličina prozora) segmenata i pomera klizne prozore. On pomera prozor kad je siguran da su svi segmenti levo od novog pokazivača bili potvrđeni. To znači da ne šaljem jedan po jedan paket nego odmah npr. 5 paketa 100, 101, 102, 103, 104 i kad mi stigne potvrda za najmanji, tj. 100, onda mogu da pomerim prozor.\\
+ \textbf{ LFS} je poslednji poslat segment.\\
+ \textbf{LAR} je poslednji potvrđeni segment pre koga su svi potvrđeni.\\
+ Šalje dok god je $ LFS - LAR \leq  W $
+ \begin{center}
+	\includegraphics[scale=0.5]{kliproz}
+\end{center}
+Pošto postoji jedno upražnjeno mesto, transp. sloj prihvata od aplikativnog još jedan segment (trans. šalje jer je $ LFS - LAR = 5 $):
+ \begin{center}
+	\includegraphics[scale=0.5]{klizproz1}
+\end{center}
+U međuvremenu, stigne potvrda za naredni segment pa se prozor pomera i jedno mesto u baferu je oslobođeno. $ LFS - LAR = 4 $ pa ponovo može da se pošalje jedan.
+ \begin{center}
+	\includegraphics[scale=0.5]{klizproz2}
+\end{center}
+\subsection{Primalac}
+Može da se realizuje na dva načina:
+\begin{enumerate}
+ \item \textbf{vrati se N}\\
+ Primalac ima bafer veličine 1. Primalac pamti redni broj poslednjeg poslatog segmenta prosleđenog aplikativnom sloju - LAS. Nakon prihvatanja segmenta, ako  redni broj nije LAS+1, primalac ga samo odbije. Ako dobije segment sa rednim brojem LAS+1, on ga prihvati, prosledi aplikativnom, apdejtuje vrednost LAS na LAS+1 i šalje potvrdu drugoj strani. Pošiljalac ima jedan tajmer i radi retransmisiju svih segmenata počevši od poslednjeg potvrđenog tj. LAR+1.
+ \item \textbf{selektivno ponavljanje}\\
+ Ako primaocu stigne segment koji nije LAS+1, on ga samo baferiše. Bafer je veličine W, kao i kod pošiljaoca. Putem ACK segmenta, primalac potvrđuje najviši uređen segment i dodatno šalje informaciju o segmentima koji nisu po redu. TCP koristi ovaj pristup. Baferiše W segmenata i održava stanje LAS promenljive. Prihvata ako je iz opsega LAS+1 do LAS+W i pritom ako stigne segment sa brojem LAS+1, on ga prosleđuje apl. sloju i ažurira LAS na LAS+1, pa šalje potvrdu. Pošiljalac ima tajmer za svaki nepotvrđen segment. Po isteku, šalje ponovo. U proseku radi manje retransmisija.
+\end{enumerate}
+ 
 \section{Kontrola toka podataka na transportnom sloju}
+(preuzeto iz beleški sa vežbi)\\
+
+Šta ako je primalac ili pošiljalac sporiji od druge strane? Treba usaglasiti brzinu slanja. \\
+
+Neka npr. primalac ima bafer veličine W (inicijalno prazan).Nakon toga mu pristignu dva segmenta, ali program i dalje ne poziva recv() - LAS raste, ali ne možemo da pomerimo prozor jer apl. sloj ne može da primi te segmente.
+ \begin{center}
+	\includegraphics[scale=0.5]{kontoka}
+\end{center}
+Sledeće što se događa je da kada stignu naredni segmenti, u nekom trenutku će se popuniti bafer i više nije moguće primati sve dok apl. sloj ne prihvati segmente. To znači da će svi ostali segmenti da budu odbijani - veza se bezveze troši.
+ \begin{center}
+	\includegraphics[scale=0.5]{kontoka1}
+\end{center}
+\textbf{Rešenje:}\\
+Kada primalac šalje potvrdu da je dobio segment, on šalje i broj slobodnih mesta u baferu - WIN. Pošiljalac koristi WIN kao efektivnu informaciju o veličini prozora. Ako je WIN veći od nule, on šalje segmente, i to maksimalno WIN segmenata, inače ne šalje.\\
+
+TCP primer: 4KB bafer kod primaoca i bafer je cirkularan.
+Uslov koji treba da važi da bi se vršilo slanje je SEQ + vel. segmenta < ACK + WIN. 
+ \begin{center}
+	\includegraphics[scale=0.7]{kontoka3}
+\end{center}
+Poš. šalje podatke u veličini 2K i redni broj 0. Primalac ima prazan bafer, kad dobije 2K, onda je do pola popunjen i vraća potvrdu da je pročitao do 2048 (to je ACK) i da ima slobodno još 2048. Pošiljalac šalje još 2K, primalac uzima to, šalje potvrdu da je pročitao i šalje informaciju da je pun, da ne može više da primi. Poš. se u tom momentu stopira dok ne dobije novu potvrdu ACK=4096 i da je dostupno još 2048 mesta (to znači da je poš. dva puta dobio potvrdu ACK za 4096 - jednom da je primalac pun, a drugi put da ima 2048 mesta).
 \section{Retransmisije i prilagodljive pauze (tajmauti) na transportnom sloju}
+(preuzeto iz beleški sa predavanja)\\
+
+Bitna stvar za TCP protokol. Postaviti tajmer kada je segment poslat, a deaktiviraj ga kad se dobije potvrda. Ako se tajmer aktivira, uradi retransmisiju. Treba odrediti dobru \textbf{dužinu pauze} jer prevelike pauze dovode do toga da predugo čekamo i treba ranije da budemo svesni da se paket izgubio jer prevelike pauze usporavaju kretanje prozora. Ako je pauza mala, onda se opterećuje mreža i izazivaju se sumnjive retransmisije.\\
+Ova pauza se lako određuje za LAN (sloj veze) jer je kratak kabl, poznate rute što znači predvidljiv RTT. Teško je za Internet (transp. sloj) jer postoji širok opseg i promenljiv RTT.
+ \begin{center}
+	\includegraphics[scale=0.5]{retr}
+\end{center}
+ \begin{center}
+	\includegraphics[scale=0.5]{retr2}
+\end{center}
+Idealno vreme pauze je $RTT+\bigtriangleup t$.
+Treba nam mehanizam da dinamički određujemo, ocenjujemo RTT i njegovu varijansu. RTT(mislim da je to vreme dok se ne dobije potvrda) varira zbog raznih stvari, npr. opterećenja mreže. Promena RTT-a nije baš potpuno slučajan proces. POstoji zavisnost od jedne vrednosti i prethodne vrednosti u vremenu.\\
+ Koristimo pristup zasnovan na pomerajućim procesima (koristimo prethodnu informaciju da bismo dobili sledeću inf):
+ \begin{center}
+	\includegraphics[scale=0.5]{retr4}
+\end{center}
+Ako sam imao RTT koji je rastao, onda ćemo u 0.9*$SRTT_{N}$ da uhvatimo taj rast, ako počne malkice da pada, nećemo to da uzmemo mnogo u obzir.\\
+Druga vrednost je procenjena varijansa - ako je RTT bio sve vreme promenljiv, onda će i ona biti velika, u suprotnom mala.\\
+Pauza treba da bude uvek iznad ocene RTT:
+ \begin{center}
+	\includegraphics[scale=0.5]{retr5}
+\end{center}
+Što je veća pauza, manje smo sigurni, pa je i gornja granica više udaljena.
 \section{TCP, svojstva, zaglavlje, realizacija kliznih prozora, uspostava i prekid veze (specifično)}
 \section{Zagušenje na transportnom sloju, opis problema i mehanizam za rešavanje AIMD}
 \section{Aplikativni sloj, uloga, interakcija sa slojem ispod, pregled Internet aplikacija.}
