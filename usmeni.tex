@@ -1882,7 +1882,175 @@ Pauza treba da bude uvek iznad ocene RTT:
 \end{center}
 Što je veća pauza, manje smo sigurni, pa je i gornja granica više udaljena.
 \section{TCP, svojstva, zaglavlje, realizacija kliznih prozora, uspostava i prekid veze (specifično)}
-\section{Zagušenje na transportnom sloju, opis problema i mehanizam za rešavanje AIMD}
+
+
+\subsection{TCP svojstva}
+\begin{itemize}
+	\item Pouzdan tok bajtova
+	\item Zasovan na vezama
+	\item Klizni prozori zarad pouzdanosti, sa prilagodljivim pauzama
+	\item Kontrola toka za spore primaoca 
+\end{itemize}
+
+\noindent\textbf{Pouzdan tok bajtova}
+\\
+Segmenti se mogu kretati neure\dj eno i nepouzdano kroz mre\v zni i ostale ni\v ze slojeve. Me\dj utim, transportni sloj ih ure\dj uje, proverava, i aplikativnom \v salje pouzdano i po redu. Slanje i primanje podataka u oba smera. Kontrolne informacije (npr. ACK) se \v cesto \v salju kao delovi dolaznih segmenata za podatke iz drugog smera (\v slepanje).
+\\
+\\ \textbf{TCP zaglavlje}
+
+\noindent Ono \v sto se dodaje u odnosu na mre\v zni sloj jeste port. Portovi identifikuju programe (socket API) - 16-bitni identifikatori. Figuri\v su i dva broja u zaglavlju: redni broj sekvence (broj koji odgovara po\v siljaocu) i acknowledgement number (broj koji odgovara primaocu). SEQ/ACK brojevi se koriste u okviru protokola kliznih prozora. Window size predstavlja veli\v cinu prozora, a Checksum je kontrola gre\v saka.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{tcp/zaglavlje.png}
+	\caption{TCP zaglavlje}
+\end{figure}
+
+
+
+\subsection{Klizni prozori}
+
+\noindent \textbf{Primalac}
+\\ Kumulativni ACK govori koji je slede\' ci o\v cekivani bajt(''LAS+1''). Opciono, koriste se i selektivni ACK-ovi(SACK) zarad optimizacije. Listanje do tri opsega primljenih bajtova.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{tcp/primalac.png}
+\end{figure}
+
+
+\noindent\textbf{Po\v siljalac}
+\\ Koristi prilagodljivu pauzu za retransmisiju segmenata koji po\v cinju od LAS+1. Koristi heuristiku kako bi br\v ze zaklju\v cio koji segmenti su izgubljeni i time izbegao istek pauze.
+\\ Heuristika: ''tri duplirana ACK-a'' impliciraju gubitak.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{tcp/posiljalac.png}
+	\caption{Po\v siljalac zaklju\v cuje da su segmenti 100-199 izgubljeni}
+\end{figure}
+
+
+\subsection{Uspostavljanje veze}
+
+Veze u protokolu TCP uspostavljaju se mehanizmom trostepenog usagla\v savanja. Da bi jedna strana (npr. server) uspostavila vezu, ona pasivno \v ceka zahteve za uspostavljanje veze tako \v sto izvr\v si operacije \textit{LISTEN} i \textit{ACCEPT}, pri \v cemu mo\v ze, ali i ne mora da nazna\v ci izvori\v ste. Druga strana (npr. klijent) izvr\v sava operaciju \textit{CONNECT}, navode\' ci IP adresu i priklju\v cak  na koji \v zeli da se pove\v ze, maksimalnu veli\v cinu TCP segmenta koji je spremna da prihvati i , neobavezno, odre\dj ene korisni\v cke podatke (npr. lozinku). Operacija CONNECT \v salje TCP segmentu s bitom \textit{SYN} postavljanim na 1 i bitom \textit{ACK} postavljenim na 0, i \v ceka odgovor.  
+\\
+\\ Kada segment stigne na odredi\v ste, tamo\v snja TCP jedinica proverava da li postoji proces koji je izvr\v sio operaciju \textit{LISTEN} na priklju\v cku nazna\v cenom na polju \textit{Odredi\v sni priklju\v cak}. Ako ne na\dj e takav proces, ona \v salje odgovor s bitom \textit{RST} postavljenim na 1 da bi odbila uspostavljanje veze. Ako neki proces oslu\v skuje priklju\v cak, predaju mu se pristigli TCP segment. On tada mo\v ze da prihvati ili odbije vezu. Ako je prihvati, to i potvr\dj uje.
+
+
+\subsection{Raskidanje TCP veze}
+
+Iako su TCP veze potpuno dupleksne, da biste razumeli kako se raskidaju, bolje je da ih posmatrate kao dve paralelne jednosmerne veze. Svaka jednosmerna veza raskida se nezavisno od svog parnjaka. Da bi raskinula vezu, svaka strana mo\v ze da po\v salje TCP segment s bitom \textit{FIN} postavljenim na 1, \v sto zna\v ci da nema vi\v se podataka za slanje. Kada se segment FIN potvrdi, taj smer se zatvara za nove podatke. Me\dj utim, podaci i dalje mogu te\' ci drugim smerom. Veza se stvarno raskida kada se zatvore oba njena smera. Za raskidanje je normalno potrebno razmeniti \v cetiri TCP segmenta: po jedan \textit{FIN} i \textit{ACK} segment za svaki smer. Me\dj utim, prvi \textit{ACK} segment i drugi \textit{FIN} segment se mogu kombinovati, tako da ukupan broj razmenjenih segmenata spada na tri. Nema bitne razlike izme\dj u situacija u kojoj ra\v cunari vezu raskidaju jedan za drugim ili istovremeno.
+\\
+\\ Da bi se izbegao problem dve vojske, koriste se tajmeri. Ako odgovor na segment \textit{FIN} ne stigne unutar dva maksimalna \v zivota paketa, po\v siljalac segmenta \textit{FIN} raskida vezu. Druga strana \' ce najzad primetit da je vi\v se niko ne slu\v sa, pa \' ce se i ona automatski isklju\v citi.
+
+
+
+\section{Zagu\v senje na transportnom sloju, opis problema i mehanizam za re\v savanje AIMD}
+
+\subsection{Priroda zagu\v senja}
+
+\noindent Kao \v sto znamo, ruteri i skretnice koriste bafere, zarad pobolj\v sanja performansi. Organizacija bafera je obi\v cno FIFO (redovi \v cekanja). Redovi \v cekanja poma\v zu pri apsorbovanju kratkoro\v cnih skokova u saobra\' caju (eng. Traffic bursts). Me\dj utim, oni nisu dizajnirani za dugoro\v cna ili srednjero\v cna stanja u kojima je ulazni saobra\' caj ve\' ci od izlaznog saobra\' caja. Ovakva stanja se nazivaju \textbf{zagu\v senjem}. Npr. gu\v zva u drumskom saobra\' caju je posledica \v sablonske upotrebe puteva (izlazak, odlazak na posao i sl.)
+\\
+\\ Efekti zagu\v senja: Performanse se drasti\v cno smanjuju kako se pove\' cava optere\' cenje - izaziva se kolaps.
+
+\subsection{Alokacija protoka}
+
+\noindent Bitan zadatak u re\v savanju problema zagu\v senja je dodeljivanje kapaciteta po\v siljaocima. Dobra dodela treba da bude efikasna i ravnopravna. Efikasnost podrazumeva da je skoro ceo kapacitet upotrebljen, ali nema zagu\v senja. Ravnopravnost podrazumeva da svaki po\v siljalac dobija racionalni udeo protoka.
+\\
+\\ Izgleda da transportni i mre\v zni sloj moraju da rade zajedno na re\v savanju ovog problema. Mre\v zni sloj detektuje zagu\v senje. Samo je on svestan ovoga (tranpsportni je na vi\v sem logi\v ckom nivou, a sloj veze na ni\v zem). Transportni sloj izaziva zagu\v senje, ali on mo\v ze i da ga razre\v si, tako \v sto redukuje optere\' cenje.
+\\
+\\ \textbf{Okvirna ideja:}
+\\ Po\v siljaoci prilago\dj avaju svoj odlazni saobra\' caj na osnovu onoga \v sto detektuju iz mre\v ze. Ovo prilago\dj avanje treba da ima u vidu efikasnost i ravnopravnost. Prilago\dj avanje mora da bude stalno, jer se stanje mre\v ze stalno menja.
+
+\subsection{AIMD}
+
+\noindent AIMD (Additive Increase Multiplicative Decrease) je kontrolni mehanizam koji omogu\' cava dostizanje dobre alokacije:
+\begin{itemize}
+	\item Po\v siljaoci aditivno pove\' cavaju brzinu slanja podataka dok mre\v za ne postane zagu\v sena
+	\item Nakon toga je umno\v zeno smanjuju kada uo\v ce zagu\v senje
+	\item TCP koristi ovo u nekoj formi
+\end{itemize}
+
+\noindent Podaci po\v siljaoca 1 i 2 prolaze kroz istu ta\v cku zagu\v senja ''usko grlo''. Me\dj utim, po\v siljaoci ne mogu da komuniciraju direktno. Ruter je taj koji npr. mo\v ze da signalizira. \v Salje binarno 0/1 ako (ne)postoji zagu\v senje.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{tcp/usko-grlo.png}
+\end{figure}
+
+
+\noindent Svaka alokacija je dopustiva, ali nisu sve dobre... AI i MD pomeraju ta\v cku alokacije na slede\' ci na\v cin:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{tcp/aimd.png}
+\end{figure}
+
+
+Aditivno uve\' canje pomera pod uglom od 45 stepeni. Umno\v zeno smanjenje vra\' ca relativno prema trenutnom protoku. Ve\' ci protok $\longrightarrow$ ve\' ca du\v zina projekcije.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{tcp/aimd2.png}
+\end{figure}
+
+
+\noindent\textbf{AIMD karakteristike}
+\begin{itemize}
+	\item Konvergira ka optimalnoj ta\v cki alokacije
+	\item Preseku pravih efikasnosti i ravnopravnosti
+	\item Radi i u vi\v sedimenzionom scenariju
+	\item Ostali pristupi ne rade posao, probajte: MIAD, MIMD, AIAD
+	\item Zahteva samo binarni odgovor/signal od mre\v ze da bi radilo
+\end{itemize}
+
+\subsection{Binarni odgovori mre\v ze}
+
+\noindent U tabeli \ref{tab: signali} prikazano je nekoliko mogu\' cih tipova signala je u upotrebi. TCP koristi prvi.
+
+
+\begin{table}[h]
+	\centering
+	\renewcommand{\arraystretch}{1.2}
+	\begin{tabular}{|c|c|c|}
+		\hline
+		\textbf{Signal} &
+		\textbf{Primer protokola} &
+		\textbf{+/-} \\
+		\hline
+		Gubitak paketa & 
+		\begin{tabular}{c}
+			TCP NewReno \\ Cubic TCP (Linux)
+		\end{tabular}
+		& 
+		\begin{tabular}{c}
+			Pouzdano detektuje \\ Kasno \v cuje	
+		\end{tabular} \\
+		\hline
+		Ka\v snjenje paketa & 
+		Compound TCP (Windows) &
+		\begin{tabular}{c}
+			Rano \v cuje \\
+			Pravi pretpostavku
+		\end{tabular} \\
+		\hline 
+		Signal rutera &
+		\begin{tabular}{c}
+			TCP sa eksplicitnim \\signalom zagu\v senja
+		\end{tabular} &
+		\begin{tabular}{c}
+			Rano \v cuje \\
+			Zahteva podr\v sku rutera
+		\end{tabular}
+		\\
+		\hline
+	\end{tabular}
+	\caption{Tipovi signala}
+	\label{tab: signali}
+\end{table}
+
+\newpage
+
 \section{Aplikativni sloj, uloga, interakcija sa slojem ispod, pregled Internet aplikacija.}
 
 
